@@ -1,13 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from './components/Routes/protectedRoute.jsx';
 import NavbarLayout from './components/layouts/navbarLayout.jsx'
-import Login from "./components/pages/LoginPage.js";
 import NotFound from "./components/pages/NotFound.js";
-import Register from './components/pages/Register.jsx'
 import CodeEditor from "./components/pages/code-editor.js";
 import Sheet from "./components/pages/Sheet.js";
 import Dashboard from "./components/pages/Dashboard.js";
 import Profile from "./components/pages/Profile.js";
+import AuthUI from "./components/pages/AuthPage.js";
+
 function App() {
 
   return (
@@ -20,15 +20,15 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard/>} />
         <Route path="editor" element={<CodeEditor/>} />
-        <Route path="sheet/:sheet-name" element={<Sheet/>} />
+        <Route path="sheet" element={<Sheet/>} />
       </Route> 
       <Route path="/profile" element={
         <ProtectedRoute>
           <Profile/>
         </ProtectedRoute>
       } />
-      <Route path="/login" element={<Login/>} />
-      <Route path="/register" element={<Register/>} />
+      <Route path="/login" element={<AuthUI page='Login' />} />
+      <Route path="/register" element={<AuthUI page='Register' />} />
       <Route path="*" element={<NotFound/>} /> 
     </Routes>
   );

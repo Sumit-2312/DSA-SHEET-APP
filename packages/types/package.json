@@ -12,6 +12,7 @@
   "type": "module",
   "exports": {
     "./dbtypes/*": "./dbtypes/*.ts",
-    "./apiResponse/*": "./apiResponse/*.ts"
+    "./apiResponse/*": "./apiResponse/*.ts",
+    "./apiRequests/*" : "./apiRequests/*.ts"
   }
 }
