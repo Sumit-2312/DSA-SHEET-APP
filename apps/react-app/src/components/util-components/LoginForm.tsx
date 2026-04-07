@@ -2,7 +2,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import type {loginType} from '@repo/types/apiRequests/login';
 import axios, { isAxiosError, type AxiosResponse } from "axios";
-import type {loginResponse} from '@repo/types/apiResponse/loginRespnse'
+import type {loginResponse} from '@repo/types/apiResponse/loginResponse'
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
