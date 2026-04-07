@@ -29,6 +29,7 @@ function App() {
       } />
       <Route path="/login" element={<AuthUI page='Login' />} />
       <Route path="/register" element={<AuthUI page='Register' />} />
+      <Route path="/verify" element={<AuthUI page='Verify' />} />
       <Route path="*" element={<NotFound/>} /> 
     </Routes>
   );

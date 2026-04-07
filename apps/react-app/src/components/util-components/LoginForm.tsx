@@ -1,8 +1,8 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import type {loginType} from '@repo/types/apiRequests/login';
+import type {loginRequestType} from '@repo/types/apiRequests/loginRequestType';
 import axios, { isAxiosError, type AxiosResponse } from "axios";
-import type {loginResponse} from '@repo/types/apiResponse/loginResponse'
+import type {loginResponseType} from '@repo/types/apiResponse/loginResponseType'
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -17,7 +17,7 @@ export default function LoginForm() {
   const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>)=>{
     e.preventDefault();
 
-    const body:loginType = {
+    const body:loginRequestType = {
         email,
         password
     }
@@ -30,14 +30,16 @@ export default function LoginForm() {
 
     // send login request to the backend 
     try{
-        console.log(`Sending login request on url ${import.meta.env.VITE_BACKEND_URL}`)
-        const response:AxiosResponse<loginResponse> =  await axios.post(`${import.meta.env.VITE_BACKEND_URL}`, body);
+        console.log(`Sending login request on url ${import.meta.env.VITE_BACKEND_URL}/login`)
+        const response:AxiosResponse<loginResponseType> =  await axios.post(`${import.meta.env.VITE_BACKEND_URL}`, body);
         const data = response.data;
 
         if(!data.success) throw new Error(data.error);
         const token = data.token;
         localStorage.setItem("token",token);
-        navigate('/dashboard');
+        localStorage.setItem("email",data.email);
+        if( data.isVerified ) navigate('/dashboard');
+        else navigate('/verify');
 
         toast.update(id,{
             render:"Logged in Successfully",

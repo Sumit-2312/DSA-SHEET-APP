@@ -1,4 +1,4 @@
-export interface loginType {
+export interface loginRequestType {
     email : string,
     password: string
 }

@@ -1,4 +1,4 @@
-export interface basicResponse  {
+export interface basicResponseType  {
     success: boolean;
     error?: string;
 }

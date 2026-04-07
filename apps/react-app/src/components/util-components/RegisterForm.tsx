@@ -3,8 +3,8 @@ import { useState } from "react";
 import axios, { isAxiosError, type AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import type {registerType} from '@repo/types/apiRequests/register'
-import type {registerResponse} from '@repo/types/apiResponse/registerResponse'
+import type {registerRequestType} from '@repo/types/apiRequests/registerRequestType'
+import type {registerResponseType} from '@repo/types/apiResponse/registerResponseType'
 
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +16,7 @@ export default function RegisterForm() {
   const handleRegister = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const body: registerType = {
+    const body: registerRequestType = {
       name,
       email,
       password,
@@ -31,10 +31,10 @@ export default function RegisterForm() {
 
     try {
       console.log(
-        `Sending register request on url ${import.meta.env.VITE_BACKEND_URL}`
+        `Sending register request on url ${import.meta.env.VITE_BACKEND_URL}/register`
       );
 
-      const response: AxiosResponse<registerResponse> = await axios.post(
+      const response: AxiosResponse<registerResponseType> = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/register`,
         body
       );
