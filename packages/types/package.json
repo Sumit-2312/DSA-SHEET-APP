@@ -13,6 +13,7 @@
   "exports": {
     "./dbtypes/*": "./dbtypes/*.ts",
     "./apiResponse/*": "./apiResponse/*.ts",
-    "./apiRequests/*" : "./apiRequests/*.ts"
+    "./apiRequests/*" : "./apiRequests/*.ts",
+    "./zodeSchemas/*" : "./zodSchemas/*.ts"
   }
 }

@@ -1,21 +1,26 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import Connect from "@repo/database/connect";
-import type { connection } from '@repo/types/dbtypes/connection'
+import type { connectionType } from '@repo/types/dbtypes/connection'
+import AuthRouter from './Routes/AuthRouter.js';
 dotenv.config();
 const app = express();
 
 async function start(){
 
     try{
-       const response: connection = await Connect();
+       const response: connectionType = await Connect();
        if( !response.success ){
          throw new Error(response.error);
        }
 
+       app.use('/auth',AuthRouter);
+
         app.listen(process.env.PORT||3000,()=>
             console.log(`http-server started on port ${process.env.PORT||3000}`
         ));
+
+
 
 
 

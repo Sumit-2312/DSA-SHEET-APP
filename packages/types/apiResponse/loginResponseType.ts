@@ -1,7 +1,8 @@
-import type { basicResponseType } from "./basicResponseType";
+import type { basicResponseType } from "./basicResponseType.ts";
 
 export  interface loginResponseType extends basicResponseType{
     token?: string,
     isVerified: boolean,
-    email: string
+    email: string,
+    message?: string
 }

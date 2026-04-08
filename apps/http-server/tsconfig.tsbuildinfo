@@ -1,1 +1,1 @@
-{"root":["./src/index.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/middlewares/authmiddleware.ts","./src/routes/authrouter.ts","./src/utils/auth/loginhandler.ts","./src/utils/auth/mailhandler.ts","./src/utils/auth/signuphandler.ts","./src/utils/auth/verifyhandler.ts","./src/utils/mail/mail.ts","./src/zodschemas/authschema.ts"],"errors":true,"version":"5.9.2"}

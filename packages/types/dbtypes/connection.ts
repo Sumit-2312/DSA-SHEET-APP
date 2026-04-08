@@ -1,3 +1,3 @@
-import type {basicResponse}  from "../apiResponse/basicResponse.ts";
+import type {basicResponseType}  from "../apiResponse/basicResponseType.ts";
 
-export interface connection extends basicResponse{}
+export interface connectionType extends basicResponseType{}

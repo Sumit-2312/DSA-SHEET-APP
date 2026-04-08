@@ -11,7 +11,7 @@ function Navbar() {
     }
 
   return (
-    <div className='flex border-2 border-black items-center justify-center gap-5'>
+    <div className='flex h-10 items-center justify-center gap-5'>
         {
             items.map((item,i)=>{
                 const lowerCaseItem = item.toLowerCase();
