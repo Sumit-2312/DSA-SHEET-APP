@@ -21,6 +21,8 @@ function VerifyPage() {
         const finalOtp = otp.join("");
         const id = toast.loading("Verifying...")
         console.log(finalOtp);
+        const email = localStorage.getItem("email");
+        console.log("email",email);
         if(finalOtp.length < 6){
             toast.update(id,{
                 render:"Must have 6 digits",
@@ -32,12 +34,13 @@ function VerifyPage() {
         }
 
         const body:verifyRequestType= {
-            otp : finalOtp
+            otp : finalOtp,
+            email: email
         }
 
         try{
-            console.log(`Sending verify request to url : ${import.meta.env.VITE_BACKEND_URL}/verify}`)
-            const response:AxiosResponse<verifyResponseType> = await axios.post(`${import.meta.env.BACKEND_URL}/verify`,body,{
+            console.log(`Sending verify request to url : ${import.meta.env.VITE_BACKEND_URL}/auth/verify}`)
+            const response:AxiosResponse<verifyResponseType> = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/verify`,body,{
                 headers:{
                     Authorization: `Bearer ${localStorage.getItem("token")}`
                 }
@@ -48,11 +51,13 @@ function VerifyPage() {
             }
             localStorage.setItem("token",data.token); // this is the update token, it will consist of {email,isVerified}
             toast.update(id,{
-                render: "verified",
+                render: data.message,
                 type: "success",
                 autoClose: 3000,
                 isLoading: false
             })
+            navigate(data.redirect);
+        
         }catch(err:unknown){
             if(isAxiosError(err)){
                 toast.update(id,{
@@ -77,6 +82,7 @@ function VerifyPage() {
                     isLoading: false
                 })
             }
+            setCountOfMainSent(0);
         }
     }
 
@@ -107,7 +113,7 @@ function VerifyPage() {
                 token,
                 email
             }
-            const response:AxiosResponse<sendMailResponseType> = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/sendMail`,body,{
+            const response:AxiosResponse<sendMailResponseType> = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/sendMail`,body,{
                 headers:{
                     Authorization:`Bearer ${token}`
                 }
@@ -125,7 +131,9 @@ function VerifyPage() {
                 isLoading: false,
                 autoClose: 3000
             })
-
+            
+            setCountOfMainSent((prev)=>prev+1);
+            setTimerValue(59);
 
         } catch (error:unknown) {
             if(isAxiosError(error)){
@@ -152,8 +160,7 @@ function VerifyPage() {
                 })
             }
         }
-        setCountOfMainSent((prev)=>prev+1);
-        setTimerValue(59);
+
     }
 
     useEffect(() => {

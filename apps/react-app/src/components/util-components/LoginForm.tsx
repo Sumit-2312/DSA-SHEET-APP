@@ -22,7 +22,7 @@ export default function LoginForm() {
         password
     }
 
-    if(!email || !password ) {
+    if(!email.trim() || !password.trim() ) {
         toast.error("Must have email and password");
         return;
     }
@@ -30,8 +30,8 @@ export default function LoginForm() {
 
     // send login request to the backend 
     try{
-        console.log(`Sending login request on url ${import.meta.env.VITE_BACKEND_URL}/login`)
-        const response:AxiosResponse<loginResponseType> =  await axios.post(`${import.meta.env.VITE_BACKEND_URL}`, body);
+        console.log(`Sending login request on url ${import.meta.env.VITE_BACKEND_URL}/auth/login`)
+        const response:AxiosResponse<loginResponseType> =  await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, body);
         const data = response.data;
 
         if(!data.success) throw new Error(data.error);
@@ -39,10 +39,10 @@ export default function LoginForm() {
         localStorage.setItem("token",token);
         localStorage.setItem("email",data.email);
         if( data.isVerified ) navigate('/dashboard');
-        else navigate('/verify');
+        else navigate(data.redirect);
 
         toast.update(id,{
-            render:"Logged in Successfully",
+            render:data.message,
             type: "success",
             isLoading: false,
             autoClose: 3000,            

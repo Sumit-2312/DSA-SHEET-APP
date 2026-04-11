@@ -22,7 +22,7 @@ export default function RegisterForm() {
       password,
     };
 
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password.trim()) {
       toast.error("All fields are required");
       return;
     }
@@ -31,11 +31,11 @@ export default function RegisterForm() {
 
     try {
       console.log(
-        `Sending register request on url ${import.meta.env.VITE_BACKEND_URL}/register`
+        `Sending register request on url ${import.meta.env.VITE_BACKEND_URL}/auth/register with body : ${body.email}`
       );
 
       const response: AxiosResponse<registerResponseType> = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/register`,
+        `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
         body
       );
 
@@ -43,10 +43,10 @@ export default function RegisterForm() {
 
       if (!data.success) throw new Error(data.error);
 
-      navigate("/login");
+      navigate(data.redirect);
 
       toast.update(id, {
-        render: "Registered Successfully",
+        render: data.message,
         type: "success",
         isLoading: false,
         autoClose: 3000,
@@ -54,7 +54,7 @@ export default function RegisterForm() {
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         toast.update(id, {
-          render: err.response?.data?.message || err.message,
+          render: err.response?.data?.error || err.message,
           type: "error",
           isLoading: false,
           autoClose: 3000,
