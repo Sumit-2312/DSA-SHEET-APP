@@ -4,8 +4,14 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+// tailwind.config.js
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        Sekuya: ["Sekuya", "sans-serif"],
+        font2: ["Bricolage Grotesque","sans-serif"]
+      },
+    },
   },
-  plugins: [],
+ plugins: [require('tailwind-scrollbar-hide')]
 }
