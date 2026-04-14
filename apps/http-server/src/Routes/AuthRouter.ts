@@ -12,7 +12,7 @@ const AuthRouter = express.Router();
 AuthRouter.post('/register',RegisterHandler);
 AuthRouter.post("/sendMail",MailHandler);
 AuthRouter.post("/verify",verifyHandler);
-AuthRouter.get('/login',LoginHandler);
+AuthRouter.post('/login',LoginHandler);
 
 
 export default AuthRouter;

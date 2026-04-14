@@ -1,18 +1,19 @@
 import { useRecoilState } from "recoil";
 import TerminalInput from "../../recoilstates/terminalInput";
-import { useState } from "react";
+
+import inputOrOutput from "../../recoilstates/inputOrOutput";
 
 type SelectedFieldType = "input" | "output";
 
 interface TerminalProps {
   height: number;
   onDragStart: (e: React.MouseEvent) => void;
+  output?: string;
 }
 
-function Terminal({ height, onDragStart }: TerminalProps) {
+function Terminal({ height, onDragStart, output }: TerminalProps) {
   const [input, setInput] = useRecoilState<string>(TerminalInput);
-  const [selectedField, setSelectedField] = useState<SelectedFieldType>("input");
-
+  const [selectedField, setSelectedField] = useRecoilState(inputOrOutput);
   return (
     <div
       style={{ height: `${height}px` }}
@@ -25,7 +26,10 @@ function Terminal({ height, onDragStart }: TerminalProps) {
       >
         <div className="flex gap-[3px] opacity-30 group-hover:opacity-80 transition-opacity">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="w-[3px] h-[3px] rounded-full bg-slate-500" />
+            <div
+              key={i}
+              className="w-[3px] h-[3px] rounded-full bg-slate-500"
+            />
           ))}
         </div>
       </div>
@@ -68,11 +72,19 @@ function Terminal({ height, onDragStart }: TerminalProps) {
             </div>
           </div>
         ) : (
-          <div>
-            {/* Output will be populated here */}
-            <div className="mt-1 text-slate-600 text-[11px] tracking-wider">
-              ✓ Waiting for run...
-            </div>
+          <div className="text-slate-200 whitespace-pre-wrap">
+            {output ? (
+              <div>
+                <div className="text-slate-500 text-[11px] mb-2">
+                  ✓ Execution Output
+                </div>
+                <div>{output}</div>
+              </div>
+            ) : (
+              <div className="mt-1 text-slate-600 text-[11px] tracking-wider">
+                ✓ Waiting for run...
+              </div>
+            )}
           </div>
         )}
       </div>

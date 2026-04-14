@@ -1,6 +1,6 @@
 import { Editor } from "@monaco-editor/react";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import codeState from "../../recoilstates/currentCode.js";
 import currentCodeLanguageState from "../../recoilstates/currentCodeLanguage.js";
 import { ChevronDown, RotateCcw } from "lucide-react";
@@ -8,6 +8,18 @@ import getSnippet from "../util-components/GetBasicSnippet.js";
 import Terminal from "../util-components/Terminal.js";
 import { ErrorBoundary } from "react-error-boundary";
 import CodeEditorFallback from "../FallbackUI/Code-editor-fallback.js";
+import TerminalInput from '../../recoilstates/terminalInput.js'
+import axios, { isAxiosError, type AxiosResponse } from "axios";
+import getLanguageId from "../util-components/getLanguageId.js";
+import inputOrOutput from "../../recoilstates/inputOrOutput.js";
+import { allSnippets } from "../../recoilstates/allSnippets.js";
+import { currentSnippet } from "../../recoilstates/currentSnippet.js";
+import type { snippetResponseType } from "@repo/types/apiResponse/snippetsResponseType";
+import { toast } from "react-toastify";
+import SnippetDropdown from "../util-components/SnippetDropdown.js";
+import CreateSnippetModal from "../util-components/AddsnippetModal.js";
+import { modalOpen } from "../../recoilstates/modalOpen.js";
+
 
 const LANGUAGES = ["javascript", "cpp", "java"];
 const MIN_TERM_HEIGHT = 80;
@@ -33,46 +45,140 @@ function CodeEditor() {
   const [termHeight, setTermHeight] = useState(DEFAULT_TERM_HEIGHT);
   const isDragging = useRef(false);
   const shellRef = useRef<HTMLDivElement>(null);
+  const [input] = useRecoilState(TerminalInput);
+  const [output, setOutput] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const setInputOrOutput = useSetRecoilState(inputOrOutput);
+  const [snippets,setSnippets] = useRecoilState(allSnippets);
+  const [current_snippet,setCurrSnippet] = useRecoilState(currentSnippet);
+  const [openModal,setOpenModal] = useRecoilState(modalOpen);
 
-  const handleTyping = (value?: string) => {
-    setTimeout(() => setCode(value || ""), 0);
-  };
 
-  useEffect(() => {
-    function handle(){
-      const snippet = getSnippet(language);
-      setBasicSnippet(snippet);
-      setCode(snippet);
-    }
-    handle();
-  }, [language]);
+    useEffect(() => {
+      const savedCode = localStorage.getItem(`code_${language}`);
 
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    isDragging.current = true;
-    e.preventDefault();
+      if (savedCode) {
+        setCode(savedCode);
+      } else {
+        const snippet = getSnippet(language);
+        setBasicSnippet(snippet);
+        setCode(snippet);
+      }
+    }, [language]);
 
-    const onMouseMove = (ev: MouseEvent) => {
-      if (!isDragging.current || !shellRef.current) return;
-      const shellBottom = shellRef.current.getBoundingClientRect().bottom;
-      const newHeight = shellBottom - ev.clientY;
-      setTermHeight(Math.max(MIN_TERM_HEIGHT, Math.min(MAX_TERM_HEIGHT, newHeight)));
+    useEffect(()=>{
+      const fetchsnippets = async( ) =>{
+        try{
+          const response:AxiosResponse<snippetResponseType> = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/editor/snippet`,{
+            headers:{
+              Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+          })
+
+          if( !response.data.success ){
+            throw new Error(response.data.message || "Failed to fetch snippets");
+          }
+          console.log(`Fetched snippets : ${JSON.stringify(response.data.snippets)}`);
+          // else set the snippets 
+          setSnippets(response.data.snippets);
+
+        }catch(err:unknown){
+          if( err instanceof Error ){
+            toast.error(err.message);
+          }
+          else if( typeof err === "string" ){
+            toast.error(err); 
+          }
+          else if( isAxiosError(err) ){ 
+            toast.error(err.response?.data?.message || "Failed to fetch snippets");
+          }
+          else{
+            toast.error("An unknown error occurred while fetching snippets");
+          }
+      }
+      }
+      fetchsnippets();
+    },[]);
+
+    const handleTyping = (value?: string) => {
+      const newCode = value || "";
+
+      setCode(newCode);
+
+      // persist per language
+      localStorage.setItem(`code_${language}`, newCode);
     };
 
-    const onMouseUp = () => {
-      isDragging.current = false;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+    const handleRun = async () => {
+      try {
+        setLoading(true);
+        setOutput("Running...");
+        setInputOrOutput("output");
+
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+        const res = await axios.post(
+          `${BACKEND_URL}/editor/executeCode`,
+          {
+            language_id: getLanguageId(language),
+            source_code: code,
+            stdin: input,
+          }
+        );
+
+        console.log(`Got response from backend : ${JSON.stringify(res.data)}`);
+
+        const data = res.data;
+
+        let finalOutput = " "
+          // data?.stdout ||
+          // data?.compile_output ||
+          // data?.stderr ||
+          // data?.message ||
+          // "No output";
+
+          if( data?.stderr ){
+            finalOutput = data?.stderr;
+          }else if( data?.compile_output ){
+            finalOutput = data.compile_output
+          }else if( data?.stdout  ){
+            finalOutput = data.stdout
+          }else finalOutput = "no output";
+
+        setOutput(finalOutput);
+      } catch (err: any) {
+        setOutput(err?.response?.data?.message || "Execution failed");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  }, []);
+    const handleDragStart = useCallback((e: React.MouseEvent) => {
+      isDragging.current = true;
+      e.preventDefault();
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!isDragging.current || !shellRef.current) return;
+        const shellBottom = shellRef.current.getBoundingClientRect().bottom;
+        const newHeight = shellBottom - ev.clientY;
+        setTermHeight(Math.max(MIN_TERM_HEIGHT, Math.min(MAX_TERM_HEIGHT, newHeight)));
+      };
+
+      const onMouseUp = () => {
+        isDragging.current = false;
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    }, []);
 
   const HEADER_H = 40; // px
   const editorHeight = `calc(100vh - ${HEADER_H}px - ${termHeight}px - 6px)`; // 6px = drag handle
 
   return (
-    <div ref={shellRef} className="flex flex-col h-screen w-screen bg-[#0f172a] text-white overflow-hidden">
+    <div ref={shellRef} className="relative flex flex-col h-screen w-screen bg-[#0f172a] text-white overflow-hidden">
 
       {/* Header */}
       <div className="h-10 flex-shrink-0 flex items-center justify-between px-4 bg-[#1e293b] border-b border-slate-700">
@@ -93,7 +199,7 @@ function CodeEditor() {
                   <div
                     key={lang}
                     onClick={() => { setLanguage(lang); setLanguageOpen(false); }}
-                    className="px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 cursor-pointer whitespace-nowrap"
+                    className={`${language === lang ? "bg-slate-800" : ""} px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 cursor-pointer whitespace-nowrap`}
                   >
                     {lang}
                   </div>
@@ -108,7 +214,15 @@ function CodeEditor() {
             className="relative flex items-center gap-1 px-2 py-1 rounded bg-[#0f172a] border border-slate-700 text-slate-400 hover:bg-slate-800 cursor-pointer select-none text-xs"
           >
             <span className="text-slate-300">Snippets</span>
+
             <ChevronDown size={12} className={`transition-transform ${snippetOpen ? "rotate-180 text-white" : ""}`} />
+            {
+              snippetOpen && <div className=" z-[100] absolute top-[100%] right-[50%] translate-x-1/2 rounded bg-[#0f172a] border border-slate-700 text-slate-400">
+                <SnippetDropdown/>
+              </div>
+            }
+
+
           </div>
 
           {/* Reset */}
@@ -118,6 +232,14 @@ function CodeEditor() {
             title="Reset to snippet"
           >
             <RotateCcw size={13} />
+          </button>
+
+          <button
+            onClick={handleRun}
+            disabled={loading}
+            className="px-3 py-1 text-xs rounded bg-green-600 hover:bg-green-500 disabled:opacity-50"
+          >
+            {loading ? "Running..." : "Run"}
           </button>
         </div>
       </div>
@@ -141,7 +263,10 @@ function CodeEditor() {
       </div>
 
       {/* Terminal — drag logic lives in CodeEditor, height passed as prop */}
-      <Terminal height={termHeight} onDragStart={handleDragStart} />
+      <Terminal height={termHeight} onDragStart={handleDragStart} output={output} />
+        {
+          openModal && <CreateSnippetModal/>
+        }
     </div>
   );
 }

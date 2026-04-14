@@ -25,7 +25,7 @@ import { atom } from "recoil";
 
 // const language = useRecoilValue(currentCodeLanguageState)
 
-const codeState = atom({
+const codeState = atom<string>({
   key: "codeState",
   default: "//write your code"
 });

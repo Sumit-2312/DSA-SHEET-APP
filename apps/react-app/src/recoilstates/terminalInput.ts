@@ -1,4 +1,3 @@
-
 import {atom} from 'recoil';
 const TerminalInput = atom({
     key: "TerminalInput",

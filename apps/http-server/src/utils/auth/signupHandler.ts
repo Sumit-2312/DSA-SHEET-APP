@@ -2,15 +2,11 @@ import bcrypt from "bcrypt";
 import { Users } from "@repo/database/db";
 import type { registerResponseType } from "@repo/types/apiResponse/registerResponseType";
 import type { Request, Response } from "express";
+import type {registerRequestType} from '@repo/types/apiRequests/registerRequestType';
 const RegisterHandler = async(req:Request, res: Response)=>{
     try{
-      
-
-        const {name,password,email} = req.body;
-        // check if the user with this email already exists or not
-        // if successfull -> return document
-        // if no document exist -> return null
-        // if something went wrong -> throws error
+    
+        const {email,password,name}:registerRequestType = req.body;
         const user = await Users.findOne({email});
 
         if( user ){

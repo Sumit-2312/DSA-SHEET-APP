@@ -1,3 +1,4 @@
 export interface verifyRequestType{
-    otp: string
+    otp: string,
+    email: string
 }

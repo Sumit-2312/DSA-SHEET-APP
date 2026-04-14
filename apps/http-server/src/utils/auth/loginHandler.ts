@@ -40,13 +40,20 @@ import type { loginRequestType } from '@repo/types/apiRequests/loginRequestType'
             email : email,
             isVerified: user.isVerified
         },process.env.JWT_SECRET as string);
+        let redirect = "/verify";
+        let message = "Successfully signed in, verify yourself"
+        if(user.isVerified){
+            redirect = "/editor"
+            message = "Successfully signed in"
+        }
 
         const response : loginResponseType = {
             success: true,
             isVerified: user.isVerified,
             email: email,
-            message: "You have successfully signed in",
-            token: token
+            message: message,
+            token: token,
+            redirect: redirect
         }
         return res.status(200).json(response);
 

@@ -4,5 +4,5 @@ export  interface loginResponseType extends basicResponseType{
     token?: string,
     isVerified: boolean,
     email: string,
-    message?: string
+    redirect?: string
 }

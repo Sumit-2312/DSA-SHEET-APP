@@ -10,13 +10,15 @@ interface AuthRequest extends Request{
 export default function AuthMiddleware(req:AuthRequest,res:Response,next:NextFunction){
     // check if the token sent by the user is valid or not
     try{
-        const token = req.headers.authorization;
+        let token = req.headers.authorization?.split(" ")[1];
+        
         if(!token){
             return res.status(401).json({
                 message: "Unauthorized"
             });
         }
         // verify the token
+        console.log("in authMiddleware with token ", token)
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
         req.user = decoded;
         next();

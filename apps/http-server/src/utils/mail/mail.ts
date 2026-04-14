@@ -43,14 +43,23 @@ async function sendMail(userEmail,userId){
         console.log("otp entry created in database");
         return {
             success: true,
-            message: "Send mail successfully"
+            message: "Check your mail"
         };
+
     }catch(err){
         console.log(err);
-        return {
-            success: false,
-            error: err
-        };
+        if( err instanceof Error){
+            return {
+                success: false,
+                error: err.message
+            };
+        }
+        else if( typeof err === 'string'){
+            return {
+                success: false,
+                error: err
+            }
+        }
     }
 }
 

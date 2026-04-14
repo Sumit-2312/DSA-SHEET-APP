@@ -1,38 +1,42 @@
 import {OTP,Users} from "@repo/database/db";
+import type {verifyRequestType} from '@repo/types/apiRequests/verifyRequestType'
+import type {verifyResponseType} from '@repo/types/apiResponse/verifyResponseType'
+import  jwt  from "jsonwebtoken";
 const verifyHandler = async(req,res)=>{
     try{
-      
-
-        const {email,otp} = req.body;
+        const {email,otp}:verifyRequestType = req.body;
         // check in the database
         // otp collection -> user,otp,expiry
         const user = await Users.findOne({email});
         if( !user ){
-            console.log("No such user exist with given email");
-            return res.status(400).json({
-                message: "something went wrong",
-                error: "No such user exist with given email"
-            });
+            const response:verifyResponseType ={
+                success: false,
+                error: "User not found"
+            }
+            return res.status(400).json(response);
         }
         console.log("after user check")
         
         // no find the user_id and otp entry in otp collection
+        //@ts-ignore
         const isEntry = await OTP.findOne({user:user._id,otp:otp});
         if( !isEntry ){
             console.log("Wrong OTP provided");
-            return res.status(400).json({
-                message: "something went wrong",
-                error: "Wrong OTP provided"
-            });
+            const response:verifyResponseType={
+                success: false,
+                error: "wrong OTP"
+            }
+            return res.status(400).json(response);
         }  
         console.log("after otp check")
 
         // check for expiry date of OPT given
         if( isEntry.expiry < new Date() ){
-            return res.status(400).json({
-                message: "something went wrong",
+            const response:verifyResponseType={
+                success: false,
                 error: "OTP expired"
-            });
+            }
+            return res.status(400).json(response);
         }
         console.log("after expiry check")
         
@@ -42,22 +46,37 @@ const verifyHandler = async(req,res)=>{
         // delete the OTP entry for that user
         await OTP.deleteOne({user: user._id});
         console.log("after deleting otp entry")
-        return res.status(200).json({
-            redirect: "/login",
-            message: "Your account has been verified successfully"
-        });
+        // also generate the new token now 
+        const newToken = jwt.sign({
+            email:email,
+            isVerified: true
+        },process.env.JWT_SECRET as string);
+
+        const response:verifyResponseType={
+            success: true,
+            message: "Verified successfully",
+            redirect:"/editor",
+            token: newToken
+        }
+        console.log(`sending response : ${response}`);
+        return res.status(200).json(response);
 
     }catch(err){
-        console.log("Error in catch block");
-        console.log(err);
-       if(err instanceof Error) return res.status(400).json({
-            message: "Something went wrong",
-            error: err.message
-        });
-        return res.status(400).json({  
-            message: "Something went wrong",
+       if(err instanceof Error)
+        {
+            const response: verifyResponseType = {
+                success: false,
+                error: err.message
+            }
+            console.log(`sending response : ${response}`);
+            return res.status(400).json(response);
+        } 
+        const response: verifyResponseType = {
+            success: false,
             error: "Unknown error"
-        });
+        }
+        console.log(`sending response : ${response}`);
+        return res.status(400).json(response);
     }
 }
 

@@ -3,8 +3,14 @@ import dotenv from 'dotenv';
 import Connect from "@repo/database/connect";
 import type { connectionType } from '@repo/types/dbtypes/connection'
 import AuthRouter from './Routes/AuthRouter.js';
+import cors from 'cors';
+import AuthMiddleware from './Middlewares/AuthMiddleware.js';
+import SheetRouter from './Routes/SheetRoutes.js';
+import EditorRouter from './Routes/EditorRouter.js';
 dotenv.config();
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 async function start(){
 
@@ -15,13 +21,15 @@ async function start(){
        }
 
        app.use('/auth',AuthRouter);
-
+       app.use('/sheet',AuthMiddleware,SheetRouter);
+       app.use('/editor',AuthMiddleware,EditorRouter);
+       
         app.listen(process.env.PORT||3000,()=>
             console.log(`http-server started on port ${process.env.PORT||3000}`
         ));
 
 
-
+        
 
 
     }catch(err:unknown){
