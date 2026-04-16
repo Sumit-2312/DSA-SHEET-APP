@@ -9,7 +9,8 @@ export default {
     extend: {
       fontFamily: {
         Sekuya: ["Sekuya", "sans-serif"],
-        font2: ["Bricolage Grotesque","sans-serif"]
+        font2: ["Bricolage Grotesque","sans-serif"],
+        content: ["Saira Stencil","sans-serif"]
       },
     },
   },

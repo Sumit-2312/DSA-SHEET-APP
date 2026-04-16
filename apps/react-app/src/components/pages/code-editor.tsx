@@ -1,6 +1,6 @@
 import { Editor } from "@monaco-editor/react";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import codeState from "../../recoilstates/currentCode.js";
 import currentCodeLanguageState from "../../recoilstates/currentCodeLanguage.js";
 import { ChevronDown, RotateCcw } from "lucide-react";
@@ -18,7 +18,12 @@ import type { snippetResponseType } from "@repo/types/apiResponse/snippetsRespon
 import { toast } from "react-toastify";
 import SnippetDropdown from "../util-components/SnippetDropdown.js";
 import CreateSnippetModal from "../util-components/AddsnippetModal.js";
-import { modalOpen } from "../../recoilstates/modalOpen.js";
+import { modalOpen } from "../../recoilstates/createSnippetmodalOpen.js";
+import { viewAllSnippetsModalOpen } from "../../recoilstates/viewAllSnippetsModalOpen.js";
+import ViewAllSnippetsModal from "../util-components/ViewAllSnippetsModal.js";
+import { useNavigate } from "react-router-dom";
+import { editSnippetModalOpen } from "../../recoilstates/editSnippetModal.js";
+import { selectedSnippetId } from "../../recoilstates/selectedSnippetIdstate.js";
 
 
 const LANGUAGES = ["javascript", "cpp", "java"];
@@ -52,6 +57,10 @@ function CodeEditor() {
   const [snippets,setSnippets] = useRecoilState(allSnippets);
   const [current_snippet,setCurrSnippet] = useRecoilState(currentSnippet);
   const [openModal,setOpenModal] = useRecoilState(modalOpen);
+  const viewAllSnippetModal = useRecoilValue(viewAllSnippetsModalOpen);
+  const Navigage = useNavigate();
+  const currentSnippetId = useRecoilValue(selectedSnippetId);
+  const [IsOpenEditSnippetModal,setIsOpenEditSnippetModal] = useRecoilState(editSnippetModalOpen);
 
 
     useEffect(() => {
@@ -82,6 +91,12 @@ function CodeEditor() {
           // else set the snippets 
           setSnippets(response.data.snippets);
 
+          if(response.data.redirect ){
+            toast.error("Session expired. Please login again.");
+            localStorage.removeItem("token");
+            Navigage("/login");
+          }
+
         }catch(err:unknown){
           if( err instanceof Error ){
             toast.error(err.message);
@@ -90,15 +105,25 @@ function CodeEditor() {
             toast.error(err); 
           }
           else if( isAxiosError(err) ){ 
-            toast.error(err.response?.data?.message || "Failed to fetch snippets");
-          }
+                if(  err.response?.data.redirect ){
+                  toast.error("Session expired. Please login again.");
+                  localStorage.removeItem("token");
+                  Navigage("/login");
+                }
+                else toast.error(err.response?.data?.message || "Failed to fetch snippets");}
           else{
             toast.error("An unknown error occurred while fetching snippets");
           }
+
       }
       }
       fetchsnippets();
     },[]);
+
+    useEffect(()=>{
+      console.log(`Current Snippet id: ${currentSnippetId} `);
+      console.log(`edit modal open or not : ${IsOpenEditSnippetModal}`);
+    });
 
     const handleTyping = (value?: string) => {
       const newCode = value || "";
@@ -123,6 +148,10 @@ function CodeEditor() {
             language_id: getLanguageId(language),
             source_code: code,
             stdin: input,
+          },{
+            headers:{
+              Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
           }
         );
 
@@ -173,6 +202,8 @@ function CodeEditor() {
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("mouseup", onMouseUp);
     }, []);
+
+    
 
   const HEADER_H = 40; // px
   const editorHeight = `calc(100vh - ${HEADER_H}px - ${termHeight}px - 6px)`; // 6px = drag handle
@@ -264,9 +295,18 @@ function CodeEditor() {
 
       {/* Terminal — drag logic lives in CodeEditor, height passed as prop */}
       <Terminal height={termHeight} onDragStart={handleDragStart} output={output} />
+      {/* create snippet modal to create new snippet */}
         {
-          openModal && <CreateSnippetModal/>
+          openModal && <CreateSnippetModal type="create" preCode={code} prelanguage={language} prename="" />
         }
+      {/* view all snippets modal */}
+      {
+        viewAllSnippetModal && <ViewAllSnippetsModal />
+      }
+      {/* create snippet modal to edit the existing snippet */}
+      {
+        IsOpenEditSnippetModal && <CreateSnippetModal type="edit" preCode={current_snippet?.content as string} prelanguage={current_snippet?.language as string} prename={current_snippet?.name as string} />
+      }
     </div>
   );
 }

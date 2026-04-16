@@ -33,8 +33,9 @@ export default function LoginForm() {
         console.log(`Sending login request on url ${import.meta.env.VITE_BACKEND_URL}/auth/login`)
         const response:AxiosResponse<loginResponseType> =  await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, body);
         const data = response.data;
-
+        
         if(!data.success) throw new Error(data.error);
+        
         const token = data.token;
         localStorage.setItem("token",token);
         localStorage.setItem("email",data.email);
@@ -50,6 +51,12 @@ export default function LoginForm() {
 
     }catch(err:unknown){
         if (isAxiosError(err)) {
+            if(  err.response?.data.redirect ){ 
+                toast.error("Session expired. Please login again.");
+                localStorage.removeItem("token");
+                navigate("/login");
+                return;
+            }
             console.log(err.response?.data?.message || err.message);
             toast.update(id,{
                 render: err.response?.data?.message || err.message,

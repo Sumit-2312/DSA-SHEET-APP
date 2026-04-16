@@ -38,22 +38,33 @@ export const addSnippet = async (req: any, res: Response) => {
         const newSnippet = {
             name: body.name,
             content: body.content,
-            user: userFromDb._id.toString()
+            user: userFromDb._id.toString(),
+            language: body.language
         };
 
         userFromDb.snippets.push(newSnippet);
 
-        await userFromDb.save();
-
-        const response : addSnippetResponseType={
+       const updateduser =  await userFromDb.save();
+       const addedSnippet = updateduser.snippets[updateduser.snippets.length - 1]; // the newly added snippet will be the last one in the array
+       if(!addedSnippet){
+        const response: addSnippetResponseType={
             success: false,
-            message: "Added Snippet",
-            snippet: {
-                name: newSnippet.name,
-                content: newSnippet.content,
-                user: email
-            }
+            error: "Failed to add snippet"
         }
+        return res.status(500).json(response);
+       }
+        const snippetToReturn = {   
+            id: addedSnippet._id,
+            name: addedSnippet.name,
+            content: addedSnippet.content,
+            language: addedSnippet.language,
+            user: addedSnippet.user
+        }
+        const response: addSnippetResponseType = {
+            success: true,
+            message: "Added Snippet",
+            snippet: snippetToReturn // return the newly added snippet
+        };
 
         return res.json(response);
 

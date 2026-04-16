@@ -1,5 +1,6 @@
 export interface basicResponseType  {
     success: boolean;
     error?: string;
-    message?: string
+    message?: string;
+    redirect?: string;
 }

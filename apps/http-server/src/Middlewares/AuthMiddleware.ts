@@ -13,13 +13,22 @@ export default function AuthMiddleware(req:AuthRequest,res:Response,next:NextFun
         let token = req.headers.authorization?.split(" ")[1];
         
         if(!token){
+            console.log("token not provided");
             return res.status(401).json({
-                message: "Unauthorized"
+                message: "Unauthorized",
+                redirect:"/login"
             });
         }
         // verify the token
         console.log("in authMiddleware with token ", token)
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+        if(typeof decoded === "string"){
+            console.log("decoded token is string ", decoded);
+            return res.status(401).json({
+                message: "Unauthorized",
+                redirect:"/login"
+            });
+        }
         req.user = decoded;
         next();
     }catch(err:unknown){

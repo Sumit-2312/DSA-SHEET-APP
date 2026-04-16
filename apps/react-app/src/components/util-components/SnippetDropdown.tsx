@@ -1,9 +1,10 @@
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { allSnippets } from "../../recoilstates/allSnippets";
 import { currentSnippet } from "../../recoilstates/currentSnippet";
 import type { snippetType } from "@repo/types/apiResponse/snippetsResponseType";
 import codeState from "../../recoilstates/currentCode";
-import { modalOpen } from "../../recoilstates/modalOpen";
+import { modalOpen } from "../../recoilstates/createSnippetmodalOpen";
+import { viewAllSnippetsModalOpen } from "../../recoilstates/viewAllSnippetsModalOpen";
 
 
 function SnippetDropdown() {
@@ -12,11 +13,12 @@ function SnippetDropdown() {
     const [current_snippet,setCurrSnippet] = useRecoilState<snippetType|null>(currentSnippet);
     const [code,setCode] = useRecoilState<string>(codeState);
     const [openModal,setOpenModal] = useRecoilState(modalOpen);
+    const setViewAllSnippetOpen = useSetRecoilState(viewAllSnippetsModalOpen);
 
     const handleClicked = (e:React.MouseEvent<HTMLDivElement>,snippet:snippetType)=>{
         e.stopPropagation();
         setCurrSnippet(snippet);
-        setCode(snippet.content);
+        setCode(snippet.content as string);
         console.log(`Snippet ${snippet.name} selected with content ${snippet.content}`);
     }
 
@@ -29,14 +31,19 @@ function SnippetDropdown() {
                     onClick={(e)=>handleClicked(e,snippet)}
                     key={i} 
                     title={snippet.name} 
-                    className={`py-1 hover:bg-gray-700 cursor-pointer  whitespace-nowrap ${current_snippet === snippet ? "bg-gray-800" : ""} `}
+                    className={`py-1 px-3 hover:bg-gray-700 cursor-pointer  whitespace-nowrap ${current_snippet === snippet ? "bg-gray-800" : ""} `}
                 >
                     {snippet.name}
                 </div>
             ))}
        </div>
         <div className="flex gap-4 items-center text-blue-600">
-            <div className='hover:underline '>View all</div>
+            <div 
+                className='hover:underline '
+                onClick={()=>setViewAllSnippetOpen(true)}
+            >
+                View all
+            </div>
             <div 
                 className="hover:underline" 
                 onClick={()=>setOpenModal(true)}

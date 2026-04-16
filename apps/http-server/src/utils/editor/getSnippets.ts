@@ -23,9 +23,12 @@ export const getSnippets = async( req:any, res:Response)=>{
             }
             return res.status(200).json(response);
         }
-        const snippets = userFromDb.snippets.map((snippet) => ({
-            ...snippet,
-            user: snippet.user.toString()
+        const snippets:snippetType[] = userFromDb.snippets.map((snippet) => ({
+            name: snippet.name,
+            content: snippet.content,
+            language: snippet.language,
+            user: snippet.user.toString(),
+            id: snippet._id.toString()
         })); // array of snippet with name,user,content
 
         const response:snippetResponseType = {
