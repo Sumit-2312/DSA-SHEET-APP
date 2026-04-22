@@ -1,4 +1,4 @@
-import { Users } from '@repo/database/db';
+import { Snippet, Users } from '@repo/database/db';
 import express, { type Request, type Response } from 'express';
 import type {snippetResponseType,snippetType} from '@repo/types/apiResponse/snippetsResponseType'
 
@@ -15,7 +15,11 @@ export const getSnippets = async( req:any, res:Response)=>{
             return res.json(response);
         }
         console.log(userFromDb);
-        if( userFromDb.snippets.length <= 0 ){
+        const userId = userFromDb._id.toString();
+
+        const snippets = await Snippet.find({user:userId});
+
+        if(  snippets.length == 0 ){
             const response: snippetResponseType={
                 success: true,
                 message:"Fetched snippets successfully",
@@ -23,7 +27,7 @@ export const getSnippets = async( req:any, res:Response)=>{
             }
             return res.status(200).json(response);
         }
-        const snippets:snippetType[] = userFromDb.snippets.map((snippet) => ({
+        const snippetsToSend:snippetType[] = snippets.map((snippet) => ({
             name: snippet.name,
             content: snippet.content,
             language: snippet.language,
@@ -34,7 +38,7 @@ export const getSnippets = async( req:any, res:Response)=>{
         const response:snippetResponseType = {
             success: true,
             message:"Fetched snippets successfully",
-            snippets
+            snippets: snippetsToSend
         }
         return res.json(response);
     }catch(err:unknown){

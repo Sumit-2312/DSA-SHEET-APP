@@ -1,29 +1,29 @@
 import { Editor } from "@monaco-editor/react";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import codeState from "../../recoilstates/currentCode.js";
-import currentCodeLanguageState from "../../recoilstates/currentCodeLanguage.js";
+import codeState from "../../recoilstates/editor/currentCode.js";
+import currentCodeLanguageState from "../../recoilstates/editor/currentCodeLanguage.js";
 import { ChevronDown, RotateCcw } from "lucide-react";
-import getSnippet from "../util-components/GetBasicSnippet.js";
-import Terminal from "../util-components/Terminal.js";
+import getSnippet from "../util-components/SnippetComponents/GetBasicSnippet.js";
 import { ErrorBoundary } from "react-error-boundary";
 import CodeEditorFallback from "../FallbackUI/Code-editor-fallback.js";
-import TerminalInput from '../../recoilstates/terminalInput.js'
+import TerminalInput from '../../recoilstates/terminal/terminalInput.js'
 import axios, { isAxiosError, type AxiosResponse } from "axios";
-import getLanguageId from "../util-components/getLanguageId.js";
-import inputOrOutput from "../../recoilstates/inputOrOutput.js";
-import { allSnippets } from "../../recoilstates/allSnippets.js";
-import { currentSnippet } from "../../recoilstates/currentSnippet.js";
+import getLanguageId from "../util-components/others/getLanguageId.js";
+import inputOrOutput from "../../recoilstates/terminal/inputOrOutput.js";
+import { allSnippets } from "../../recoilstates/snippets/allSnippets.js";
+import { currentSnippet } from "../../recoilstates/snippets/currentSnippet.js";
 import type { snippetResponseType } from "@repo/types/apiResponse/snippetsResponseType";
 import { toast } from "react-toastify";
-import SnippetDropdown from "../util-components/SnippetDropdown.js";
-import CreateSnippetModal from "../util-components/AddsnippetModal.js";
-import { modalOpen } from "../../recoilstates/createSnippetmodalOpen.js";
-import { viewAllSnippetsModalOpen } from "../../recoilstates/viewAllSnippetsModalOpen.js";
-import ViewAllSnippetsModal from "../util-components/ViewAllSnippetsModal.js";
+import { modalOpen } from "../../recoilstates/snippets/createSnippetmodalOpen.js";
+import { viewAllSnippetsModalOpen } from "../../recoilstates/snippets/viewAllSnippetsModalOpen.js";
 import { useNavigate } from "react-router-dom";
-import { editSnippetModalOpen } from "../../recoilstates/editSnippetModal.js";
-import { selectedSnippetId } from "../../recoilstates/selectedSnippetIdstate.js";
+import { editSnippetModalOpen } from "../../recoilstates/snippets/editSnippetModal.js";
+import { selectedSnippetId } from "../../recoilstates/snippets/selectedSnippetIdstate.js";
+import SnippetDropdown from "../util-components/SnippetComponents/SnippetDropdown.js";
+import CreateSnippetModal from "../util-components/SnippetComponents/AddsnippetModal.js";
+import ViewAllSnippetsModal from "../util-components/SnippetComponents/ViewAllSnippetsModal.js";
+import Terminal from "../util-components/others/Terminal.js";
 
 
 const LANGUAGES = ["javascript", "cpp", "java"];
@@ -54,13 +54,13 @@ function CodeEditor() {
   const [output, setOutput] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const setInputOrOutput = useSetRecoilState(inputOrOutput);
-  const [snippets,setSnippets] = useRecoilState(allSnippets);
-  const [current_snippet,setCurrSnippet] = useRecoilState(currentSnippet);
-  const [openModal,setOpenModal] = useRecoilState(modalOpen);
+  const [,setSnippets] = useRecoilState(allSnippets);
+  const [current_snippet,] = useRecoilState(currentSnippet);
+  const [openModal,] = useRecoilState(modalOpen);
   const viewAllSnippetModal = useRecoilValue(viewAllSnippetsModalOpen);
   const Navigage = useNavigate();
   const currentSnippetId = useRecoilValue(selectedSnippetId);
-  const [IsOpenEditSnippetModal,setIsOpenEditSnippetModal] = useRecoilState(editSnippetModalOpen);
+  const [IsOpenEditSnippetModal,] = useRecoilState(editSnippetModalOpen);
 
 
     useEffect(() => {
@@ -119,12 +119,7 @@ function CodeEditor() {
       }
       fetchsnippets();
     },[]);
-
-    useEffect(()=>{
-      console.log(`Current Snippet id: ${currentSnippetId} `);
-      console.log(`edit modal open or not : ${IsOpenEditSnippetModal}`);
-    });
-
+    
     const handleTyping = (value?: string) => {
       const newCode = value || "";
 

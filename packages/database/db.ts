@@ -1,9 +1,7 @@
 import mongoose, { model } from "mongoose";
 import { Schema } from "mongoose";
 
-/* =========================
-   USER SCHEMA (UNCHANGED + EXTENDED)
-========================= */
+//   USER SCHEMA 
 const UserSchema = new Schema({
     name: {
         type: String,
@@ -23,51 +21,17 @@ const UserSchema = new Schema({
         type: Boolean,
         required: true
     },
-    sheet:{
-      type: String,
-      enum: ["Fraz","Striver"]
-    },
-    sheetsProgress: [
+    sheets:[
       {
-        sheetId: {
-          type: Schema.Types.ObjectId,
-          ref: "Sheets"
-        },
-        solvedQuestions: [
-          {
-            type: Schema.Types.ObjectId,
-            ref: "Question"
-          }
-        ]
+        type : Schema.Types.ObjectId,
+        ref: "Sheets"
       }
     ],
-    snippets:[
-      {
-        name: {
-          type: String,
-          required: true,
-          unique: true
-        },
-        user: {
-          type: Schema.Types.ObjectId,
-          required: true
-        },
-        content:{
-          type:String,
-          required: true,
-        },
-        language:{
-          type: String,
-          required: true
-        }
-      }
-    ]
 }, { timestamps: true });
 
 
-/* =========================
-   USER OTP SCHEMA (UNCHANGED)
-========================= */
+
+// USER OTP SCHEMA
 const UserOtpSchema = new Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -85,153 +49,156 @@ const UserOtpSchema = new Schema({
 }, { timestamps: true });
 
 
-/* =========================
-   SHEET SCHEMA
-========================= */
+
+
+// SHEET SCHEMA
 const SheetsSchema = new Schema({
   name: {
     type: String,
-    enum: ["Fraz", "Striver","Custom"],
     required: true
   },
-
-  isBase: {
-    type: Boolean,
-    default: true
+  totalQuestions:{
+    type: Number,
+    default: 0
   },
-
+  solvedQuestions: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Question"
+    }
+  ],
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: "users",
     default: null
-  },
-
-  rootFolders: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Folders"
-    }
-  ]
-
+  }
 }, { timestamps: true });
 
 
-/* =========================
-   FOLDER SCHEMA (TREE STRUCTURE)
-========================= */
+
+
+
+// FOLDER SCHEMA 
 const FolderSchema = new Schema({
   name: {
     type: String,
     required: true
   },
-
   sheetId: {
     type: Schema.Types.ObjectId,
     ref: "Sheets",
     required: true
   },
-
   parentFolderId: {
     type: Schema.Types.ObjectId,
     ref: "Folders",
-    default: null
+    default: null 
   },
-
   childFolders: [
     {
       type: Schema.Types.ObjectId,
       ref: "Folders"
     }
   ],
-
-  questions: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Question"
-    }
-  ],
-
   order: {
     type: Number,
     default: 0
+  },
+  createdBy: {
+	  type: Schema.Types.ObjectId,
+	  ref: "users"
   }
-
 }, { timestamps: true });
 
 
-/* =========================
-   QUESTION SCHEMA (BASE + CUSTOM)
-========================= */
+
+
+// QUESTION SCHEMA 
 const QuestionSchema = new Schema({
-  title: {
+    title: {
+      type: String,
+      required: true
+    },
+    link: {
+      type: String,
+      required: true
+    },
+    difficulty: {
+        type: String,
+        enum: ["easy", "medium", "hard"],
+    },
+    done:{
+      type:Boolean,
+      default: false
+    },
+    platform: {
+      type: String,
+    },
+    sheetId: {
+      type: Schema.Types.ObjectId,
+      ref: "Sheets",
+      required: true
+    },
+    folderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Folders",
+      required: true
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "users",
+      default: null
+    },
+    notes: {
+      type: String,
+      default: ""
+    },
+    resourceLink:{
+      type: String,
+      default: ""
+    }
+}, { timestamps: true });
+
+
+// Snippets
+
+const SnippetSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  content: {
     type: String,
     required: true
   },
-
-  link: {
+  language: {
     type: String,
     required: true
   },
-
-  difficulty: {
-    type: String,
-    enum: ["easy", "medium", "hard"],
-  },
-
-  platform: {
-    type: String,
-    enum: ["leetcode", "gfg", "codeforces"]
-  },
-
-  sheetId: {
-    type: Schema.Types.ObjectId,
-    ref: "Sheets",
-    required: true
-  },
-
-  folderId: {
-    type: Schema.Types.ObjectId,
-    ref: "Folders",
-    required: true
-  },
-
-  // ✅ CUSTOM QUESTION SUPPORT
-  isCustom: {
-    type: Boolean,
-    default: false
-  },
-
-  createdBy: {
+  user: {
     type: Schema.Types.ObjectId,
     ref: "users",
-    default: null
-  },
-
-  notes: {
-    type: String,
-    default: ""
+    required: true
   }
-
 }, { timestamps: true });
 
 
-/* =========================
-   MODELS
-========================= */
+
+// MODELS
 const Question = model('Question', QuestionSchema);
 const Users = model('users', UserSchema);
 const OTP = model('otp', UserOtpSchema);
 const Sheets = model('Sheets', SheetsSchema);
 const Folders = model('Folders', FolderSchema);
+const Snippet = model('Snippet', SnippetSchema);
 
-
-/* =========================
-   EXPORTS
-========================= */
+// EXPORTS
 export {
     Users,
     OTP,
     Sheets,
     Question,
-    Folders
+    Folders,
+    Snippet
 };

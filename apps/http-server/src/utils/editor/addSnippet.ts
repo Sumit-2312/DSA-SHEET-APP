@@ -1,4 +1,4 @@
-import { Users } from "@repo/database/db";
+import { Snippet, Users } from "@repo/database/db";
 import type { Response } from "express";
 import type {addSnippetRequestType} from '@repo/types/apiRequests/addSnippetRequestType'
 import type {addSnippetResponseType} from '@repo/types/apiResponse/addSnippetResponseType'
@@ -15,13 +15,30 @@ export const addSnippet = async (req: any, res: Response) => {
         return res.status(401).json(response);
     }
 
-    if (!body.content) {
+    if (!body.content || typeof body.content !== 'string') {
         const response:addSnippetResponseType ={
             success: false,
             error: "You need to have some code"
         }
         return res.status(400).json(response);
     }
+
+    if (!body.name || typeof body.name !== 'string') {
+        const response:addSnippetResponseType ={
+            success: false,
+            error: "Snippet name is required"
+        }
+        return res.status(400).json(response);
+    }
+
+    if(!body.language || typeof body.language !== 'string'){
+        const response:addSnippetResponseType ={
+            success: false,
+            error: "Snippet language is required"
+        }
+        return res.status(400).json(response);
+    }
+
 
     try {
         const userFromDb = await Users.findOne({ email });
@@ -35,17 +52,14 @@ export const addSnippet = async (req: any, res: Response) => {
             return res.json(response);
         }
 
-        const newSnippet = {
+
+        const addedSnippet = await Snippet.create({
             name: body.name,
             content: body.content,
             user: userFromDb._id.toString(),
             language: body.language
-        };
+        })
 
-        userFromDb.snippets.push(newSnippet);
-
-       const updateduser =  await userFromDb.save();
-       const addedSnippet = updateduser.snippets[updateduser.snippets.length - 1]; // the newly added snippet will be the last one in the array
        if(!addedSnippet){
         const response: addSnippetResponseType={
             success: false,
@@ -53,6 +67,7 @@ export const addSnippet = async (req: any, res: Response) => {
         }
         return res.status(500).json(response);
        }
+       
         const snippetToReturn = {   
             id: addedSnippet._id,
             name: addedSnippet.name,

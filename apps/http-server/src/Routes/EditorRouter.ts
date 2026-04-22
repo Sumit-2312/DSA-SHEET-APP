@@ -10,11 +10,11 @@ const EditorRouter = express.Router();
 
 EditorRouter.post("/executeCode",Execute);
 
-EditorRouter.get("/snippet",getSnippets);
+EditorRouter.get("/snippet",getSnippets); //
 
-EditorRouter.post('/snippet',addSnippet);
+EditorRouter.post('/snippet',addSnippet); //
 
-EditorRouter.patch('/snippet',editSnippet);
+EditorRouter.patch('/snippet',editSnippet); //
 
 EditorRouter.delete('/snippet',deleteSnippet);
 

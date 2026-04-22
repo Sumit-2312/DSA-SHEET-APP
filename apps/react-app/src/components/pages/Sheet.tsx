@@ -1,11 +1,21 @@
 import { ErrorBoundary } from "react-error-boundary";
 import SheetFallback from "../FallbackUI/SheetPage-fallback";
-import {  useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { useRecoilState } from "recoil";
-import { currentSheet } from "../../recoilstates/currentSheet";
-import Folders from "../util-components/Folders";
-import Questions from "../util-components/Questions";
+import {  useEffect, useRef, useState } from "react";
+
+import { useRecoilState, useRecoilValue } from "recoil";
+import Questions from "../util-components/QuestionComponents/Questions";
+import AddNewFolderComponent from "../util-components/FolderComponents/addNewFolderComponent";
+import AddQuestionModal from "../util-components/QuestionComponents/addQuestionComponent";
+import AddResourceModal from "../util-components/QuestionComponents/addResourceModal";
+import NotesModal from "../util-components/QuestionComponents/notesModal";
+import Folders from "../util-components/FolderComponents/Folders";
+import { currentSheetContent } from "../../recoilstates/sheet/currentSheetContent";
+import { addFolderModalState } from "../../recoilstates/folders/addFolderModalState";
+import { useNavigate, useParams } from "react-router-dom";
+import axios, { type AxiosResponse } from "axios";
+import type { getSheetDataResponseType, SheetDataType } from "@repo/types/apiResponse/getSheetDataResponseType";
+import { toast } from "react-toastify";
+
 
 
 const NAVBAR_HEIGHT = 56; // px
@@ -13,16 +23,17 @@ const sheetPageHeight = `calc(100vh - ${NAVBAR_HEIGHT}px)`;
 
 const MIN_FOLDERS_WIDTH = 20; // vw
 const MAX_FOLDERS_WIDTH = 50; // vw
-type sheetType = "Fraz"|"Striver"|"Custom"
-const Sheets:sheetType[] = ["Fraz","Striver","Custom"]
+
 
 
 function Sheet() {
   const [folder_width, setFolderWidth] = useState(MIN_FOLDERS_WIDTH);
-  const [dragging, setDragging] = useState(false);
-  const [selectedSheet,setSelectedSheet] = useRecoilState(currentSheet);
+  const [, setDragging] = useState(false);
+  const [,setCurrentSheetContent] = useRecoilState(currentSheetContent);
   const containerRef = useRef(null);
-  const [sheetsVisible,setSheetsVisible] = useState(false);
+  const [IsOpenAddFoldelModal,openAddFolderModal] = useRecoilState(addFolderModalState);
+  const Navigate = useNavigate();
+  const {id} = useParams();
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -56,9 +67,42 @@ function Sheet() {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const showSheets = ()=>{
-    setSheetsVisible((prev)=>!prev);
-  }
+  useEffect(()=>{
+    const fetchSheetData = async()=>{
+      try{
+          const response:AxiosResponse<getSheetDataResponseType> = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/sheet/SheetData`,{
+            params:{id}, // will be passed as query 
+            headers:{
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+          const data =response.data;
+          if( !data.success ){
+            throw new Error(data.error);
+          }
+          if(data.redirect){
+            Navigate(data.redirect);
+          }
+
+          setCurrentSheetContent((prev:SheetDataType)=>{
+            return {
+              id: data.id,
+              name: data.name,
+              Folders:data.Folders,
+              solvedQuestionsCount: data.solvedQuestionsCount,
+              solvedQuestionsIds: data.solvedQuestionsIds
+            }
+          })
+
+          console.log("Fetched the sheet data successfully");
+      }catch(err:any){
+        console.log("error occured while fetching the sheet content ",err);
+        toast.error(err.message || err);
+      }
+    }
+    fetchSheetData();
+  },[id]);
+
 
   return (
     <div
@@ -78,34 +122,10 @@ function Sheet() {
                   <p className="text-xl font-Sekuya text-white font-bold " >Dsa Sheet</p>
                   <p className="text-sm text-gray-300  ">Track your progress</p>
                 </div>
-                <div 
-                  onMouseLeave={showSheets}
-                  onMouseEnter={showSheets}
-                  className="relative group hover:cursor-pointer flex items-center gap-2 ">
-
-                  <div className="pb-1 text-lg ">{selectedSheet}</div>
-                  <div className="group-hover:block hidden ">
-                    <ChevronDown size={15}  />
-                  </div>
-
-                  <div className="absolute top-[60%] flex flex-col gap-1 p-2  ">
-                    { sheetsVisible &&
-                      Sheets.map((sheet)=>{
-                          return(
-                            <div 
-                              onClick={()=>setSelectedSheet(sheet)}
-                              className={`${selectedSheet === sheet ? "bg-gray-800":""} bg-gray-700 hover:bg-gray-800 rounded-sm px-3 select-none `}>
-                              {sheet}
-                            </div>
-                          )
-                      })
-                    }
-                  </div>
-
-                </div>
+ 
           </div>
           <div className="min-h-0 flex-1 ">
-              <Folders/>
+              <Folders />
           </div>
         </div>
 
@@ -131,9 +151,12 @@ function Sheet() {
             }} 
             className="absolute bottom-0 left-0 h-10 flex justify-start items-end px-6 py-2  bg-gray-900 "
           >
-          <button className="border font-font2 h-fit px-4 rounded-sm hover:bg-gray-700 ">
-            Add Folder
-          </button>
+            <button
+              onClick={() => openAddFolderModal(true)}
+              className="border font-font2 h-fit px-4 rounded-sm hover:bg-gray-700"
+            >
+              Add Folder
+            </button>
         </div>
       </div>
 
@@ -141,6 +164,14 @@ function Sheet() {
       <div className="h-full flex-1 ">
             <Questions />
       </div>
+
+        {/* Modals */}
+          { IsOpenAddFoldelModal &&
+            <AddNewFolderComponent/>
+          }
+          <AddResourceModal/>
+          <NotesModal/>
+          <AddQuestionModal />
     </div>
   );
 }

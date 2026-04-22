@@ -1,5 +1,4 @@
-async function removeFolder(){
-    console.log('remove folder');
-}
+import type { Response } from "express";
 
-export default removeFolder;
+export const removeFolder = async(req:any,res:Response) =>{
+}

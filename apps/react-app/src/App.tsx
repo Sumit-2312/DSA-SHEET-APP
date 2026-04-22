@@ -20,7 +20,7 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard/>} />
         <Route path="editor" element={<CodeEditor/>} />
-        <Route path="sheet" element={<Sheet/>} />
+        <Route path="sheet/:id" element={<Sheet/>} />
       </Route> 
       <Route path="/profile" element={
         <ProtectedRoute>

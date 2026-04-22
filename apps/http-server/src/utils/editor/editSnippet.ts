@@ -1,4 +1,5 @@
-import { Users } from "@repo/database/db";
+import { Snippet,  Users } from "@repo/database/db";
+import type { basicResponseType } from "@repo/types/apiResponse/basicResponseType";
 import type { Response } from "express";
 
 const editSnippet = async(req:any, res:Response)=>{
@@ -22,44 +23,35 @@ const editSnippet = async(req:any, res:Response)=>{
     }
     
     try{
-        const userFromDb = await Users.findOne({email});    
-        if( !userFromDb ){
-            return res.status(404).json({
-                success: false,
-                error: "User not found",
-                redirect: "/login"
-            });
-        }
 
-        const snippetIndex = userFromDb.snippets.findIndex((snippet) => snippet._id.toString() === snippetId);
-        console.log(userFromDb);
-        if( snippetIndex === -1 ){
-            console.log("snippetIndex === -1 function called");
-            return res.status(404).json({
+        const snippetFromDb = await Snippet.findById(snippetId);
+
+
+        if(!snippetFromDb){
+            const response:basicResponseType = {
                 success: false,
                 error: "Snippet not found"
-            });
+            }
+            return res.status(400).json(response);
         }
 
-        const snippet = userFromDb.snippets[snippetIndex];
-        if( !snippet ){
-            console.log("!snippet function called");
-            return res.status(404).json({
-                success: false,
-                error: "Snippet not found"
-            });
+        if(name) snippetFromDb.name = name;
+        if(content) snippetFromDb.content = content;
+        if(language) snippetFromDb.language = language;
+
+        await snippetFromDb.save();
+
+        const snippetToSend = {
+            id: snippetFromDb._id.toString(),
+            name: snippetFromDb.name,
+            content: snippetFromDb.content,
+            language: snippetFromDb.language
         }
-
-        if(name) snippet.name = name;
-        if(content) snippet.content = content;
-        if(language) snippet.language = language;
-
-        await userFromDb.save();
 
         return res.json({
             success: true,
             message: "Snippet updated successfully",
-            snippet: userFromDb.snippets[snippetIndex]
+            snippet: snippetToSend
         });
 
     }catch(err:unknown){

@@ -14,7 +14,7 @@
     "./dbtypes/*": "./dbtypes/*.ts",
     "./apiResponse/*": "./apiResponse/*.ts",
     "./apiRequests/*" : "./apiRequests/*.ts",
-    "./zodeSchemas/*" : "./zodSchemas/*.ts",
+    "./zodeSchemas/*" : "./zodeSchemas/*.ts",
     "./sheet/*":"./sheet/*.ts"
   }
 }

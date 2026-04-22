@@ -15,7 +15,7 @@ export default function AuthMiddleware(req:AuthRequest,res:Response,next:NextFun
         if(!token){
             console.log("token not provided");
             return res.status(401).json({
-                message: "Unauthorized",
+                error: "Unauthorized",
                 redirect:"/login"
             });
         }
@@ -24,8 +24,8 @@ export default function AuthMiddleware(req:AuthRequest,res:Response,next:NextFun
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
         if(typeof decoded === "string"){
             console.log("decoded token is string ", decoded);
-            return res.status(401).json({
-                message: "Unauthorized",
+            return res.status(200).json({
+                error: "Unauthorized",
                 redirect:"/login"
             });
         }
@@ -34,12 +34,14 @@ export default function AuthMiddleware(req:AuthRequest,res:Response,next:NextFun
     }catch(err:unknown){
         if( err instanceof Error){
             return res.status(500).json({
-                message: "Something went wrong in catch block",
-                error: err.message
+                message: "Something went wrong in catch block in middleware",
+                error: err,
+                redirect: "/login"
             });
         }else return res.status(500).json({
             message: "Unknown error occured in authMIddleware",
-            error: "Unknown error"
+            error: "Unknown error",
+            redirect: "/login"
         })
     }
 }

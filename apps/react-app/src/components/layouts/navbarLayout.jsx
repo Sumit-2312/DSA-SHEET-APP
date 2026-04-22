@@ -1,5 +1,8 @@
 import { Outlet } from 'react-router-dom'
-import Navbar from '../util-components/Navbar'
+import Navbar from '../util-components/others/Navbar'
+import CreateSheetModal from '../util-components/sheetComponents/createSheetModal'
+import ViewAllSheetsModal from '../util-components/sheetComponents/viewAllSheetsModal'
+import EditSheetNameModal from '../util-components/sheetComponents/editSheetNameModal'
 
 function NavbarLayout() {
   return (
@@ -8,6 +11,10 @@ function NavbarLayout() {
         <div className='' >
             <Outlet/>
         </div>
+
+        <CreateSheetModal/>
+        <ViewAllSheetsModal/>
+        <EditSheetNameModal/>
     </div>
   )
 }

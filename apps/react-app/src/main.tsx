@@ -10,7 +10,7 @@ createRoot(document.getElementById('root')!).render(
   <RecoilRoot>
     <BrowserRouter>
       <ToastContainer
-        position="top-right"
+        position="bottom-right"
         autoClose={3000}
         hideProgressBar= {false}
         closeOnClick = {true}

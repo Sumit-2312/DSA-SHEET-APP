@@ -1,4 +1,5 @@
-import { Users } from "@repo/database/db";
+import { Snippet, Users } from "@repo/database/db";
+import type { basicResponseType } from "@repo/types/apiResponse/basicResponseType";
 import type { Response } from "express";
 
 const deleteSnippet = async (req:any,res:Response) => {  
@@ -31,17 +32,16 @@ const deleteSnippet = async (req:any,res:Response) => {
             });
         }
 
-        const snippetIndex = userFromDb.snippets.findIndex((snippet) => snippet._id.toString() === id);
-        if( snippetIndex === -1 ){
-            return res.status(404).json({       
+        const userId = userFromDb._id.toString();
+
+        const snippetFromDb = await Snippet.deleteOne({user:userId})
+
+        if(!snippetFromDb){
+            const response:basicResponseType = {
                 success: false,
                 error: "Snippet not found"
-            });
+            }
         }
-
-        userFromDb.snippets.splice(snippetIndex, 1); // remove the snippet from the array
-
-        await userFromDb.save();
         
         return res.json({
             success: true,

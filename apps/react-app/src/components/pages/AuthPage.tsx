@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import LoginForm from "../util-components/LoginForm";
-import RegisterForm from "../util-components/RegisterForm";
-import VerifyPage from "../util-components/VerifyPage";
+import LoginForm from "../util-components/AuthComponents/LoginForm";
+import RegisterForm from "../util-components/AuthComponents/RegisterForm";
+import VerifyPage from "../util-components/AuthComponents/VerifyPage";
 
 export default function AuthUI({page}) {
   const navigate = useNavigate();
