@@ -6,7 +6,6 @@ import { addFolderModalState } from "../../../recoilstates/folders/addFolderModa
 import { toast } from "react-toastify";
 import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 import axios from "axios";
-import { currentSheet } from "../../../recoilstates/sheet/currentSheet";
 import { useNavigate, useParams } from "react-router-dom";
 import { currentSheetContent } from "../../../recoilstates/sheet/currentSheetContent";
 import type {addFolderResponseType} from '@repo/types/apiResponse/addFolderResponseType'
@@ -56,6 +55,10 @@ function AddNewFolderComponent() {
     }
     if(!curr_folder){
       toast.info("Must select the folder");
+    }
+    if(curr_folder.questions.length > 0 ){
+      toast.error("SubFolders can only be added in folders which doesn't have any question, Please move questions to other folder or create subfolder to add question");
+      return;
     }
 
     console.log(`new folder name : ${folderName} \n ParentFolderName: ${curr_folder.name}`);

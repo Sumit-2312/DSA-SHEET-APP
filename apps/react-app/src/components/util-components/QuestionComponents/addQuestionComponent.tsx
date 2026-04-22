@@ -82,6 +82,14 @@ function AddQuestionModal() {
         return;
       }
 
+      console.log("Current folder before adding question:", curr_folder);
+
+      if(curr_folder.childFolders.length > 0 ){
+        toast.error("To Added question, folder should not have any subFolders");
+        toast.error("Please move subFolders to other folder or create new folder to add question");
+        return;
+      }
+
       const sheetId = currSheetData?.id ?? "";
 
       const body: {

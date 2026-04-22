@@ -4,7 +4,7 @@ import { currentSheetContent } from "../../../recoilstates/sheet/currentSheetCon
 import FolderItem from "../FolderComponents/FolderItem";
 import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 import type { Folder as FolderType } from "@repo/types/apiResponse/getSheetDataResponseType";
-import { useParams } from "react-router-dom";
+
 
 function Folders() {
   const content = useRecoilValue(currentSheetContent);

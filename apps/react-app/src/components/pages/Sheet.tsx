@@ -143,21 +143,6 @@ function Sheet() {
             ))}
           </div>
         </div>
-
-        {/* Add folder button */}
-        <div 
-            style={{
-              width: `calc(${folder_width}vw - 20px )`
-            }} 
-            className="absolute bottom-0 left-0 h-10 flex justify-start items-end px-6 py-2  bg-gray-900 "
-          >
-            <button
-              onClick={() => openAddFolderModal(true)}
-              className="border font-font2 h-fit px-4 rounded-sm hover:bg-gray-700"
-            >
-              Add Folder
-            </button>
-        </div>
       </div>
 
       {/* right side */}

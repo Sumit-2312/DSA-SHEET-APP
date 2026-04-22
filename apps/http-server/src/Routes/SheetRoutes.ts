@@ -19,11 +19,11 @@ SheetRouter.get('/SheetData', sheetData); // done
 SheetRouter.get('/SheetList', sheetList); // done
 SheetRouter.get('/userDetails', userDetails);
 SheetRouter.post('/updateQuestion', updateQuestion);
-SheetRouter.post('/addQuestion', addQuestion);
+SheetRouter.post('/addQuestion', addQuestion); // done
 SheetRouter.post('/removeQuestion', removeQuestion);    
-SheetRouter.post('/addFolder',  addFolder);
+SheetRouter.post('/addFolder',  addFolder); // done
 SheetRouter.post('/updateFolder', updateFolder);
-SheetRouter.post('/removeFolder', removeFolder);
+SheetRouter.post('/removeFolder', removeFolder); 
 SheetRouter.post('/createSheet',createSheet); //
 SheetRouter.delete('/Sheet',deleteSheet);
 SheetRouter.patch('/Sheet',updateSheet); //
