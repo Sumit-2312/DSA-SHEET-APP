@@ -57,16 +57,6 @@ const SheetsSchema = new Schema({
     type: String,
     required: true
   },
-  totalQuestions:{
-    type: Number,
-    default: 0
-  },
-  solvedQuestions: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Question"
-    }
-  ],
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: "users",
@@ -94,12 +84,6 @@ const FolderSchema = new Schema({
     ref: "Folders",
     default: null 
   },
-  childFolders: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Folders"
-    }
-  ],
   order: {
     type: Number,
     default: 0

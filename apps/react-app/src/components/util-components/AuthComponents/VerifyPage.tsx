@@ -24,6 +24,7 @@ function VerifyPage() {
         console.log(finalOtp);
         const email = localStorage.getItem("email");
         console.log("email",email);
+
         if(finalOtp.length < 6){
             toast.update(id,{
                 render:"Must have 6 digits",
@@ -60,14 +61,17 @@ function VerifyPage() {
             navigate(data.redirect);
         
         }catch(err:unknown){
+            console.log("Error while verifying otp : ",err);
             if(isAxiosError(err)){
+                console.log(err.response?.data || err.message);
                 toast.update(id,{
-                    render: err.message,
+                    render: err.response?.data?.error || err.message,
                     type: 'error',
                     autoClose: 3000,
                     isLoading: false
                 })
             }else if( err instanceof Error ){
+                console.log("error : ",err.message);
                  toast.update(id,{
                     render: err.message,
                     type: 'error',
@@ -139,7 +143,7 @@ function VerifyPage() {
         } catch (error:unknown) {
             if(isAxiosError(error)){
                 toast.update(id,{
-                    render: error.message,
+                    render: error.response.data.error || error.message,
                     type: 'error',
                     isLoading:false,
                     autoClose: 3000

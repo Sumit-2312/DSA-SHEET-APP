@@ -16,9 +16,9 @@ import { updateSheet } from '../utils/sheet/updateSheet.js';
 const SheetRouter = express.Router();
 
 SheetRouter.get('/SheetData', sheetData); // done
-SheetRouter.get('/SheetList', sheetList); // done
+SheetRouter.get('/SheetList', sheetList); 
 SheetRouter.get('/userDetails', userDetails);
-SheetRouter.post('/updateQuestion', updateQuestion);
+SheetRouter.patch('/question', updateQuestion);
 SheetRouter.post('/addQuestion', addQuestion); // done
 SheetRouter.post('/removeQuestion', removeQuestion);    
 SheetRouter.post('/addFolder',  addFolder); // done

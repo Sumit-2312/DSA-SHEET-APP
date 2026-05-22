@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { createSheetModalOpen } from '../../../recoilstates/sheet/createSheetModalState';
 import { viewAllSheetsModalOpen } from '../../../recoilstates/sheet/viewAllSheetsModalOpenState';
 import { currentSheet } from '../../../recoilstates/sheet/currentSheet';
+import { nav } from 'framer-motion/client';
 
 function Navbar() {
     const navigate = useNavigate();
@@ -47,8 +48,12 @@ function Navbar() {
 
                 setAllSheets(data.sheets);
             }catch(err){
-                console.log(err.message || err );
-                toast.error(err.message || err);
+                console.log(err.response.data.redirect);
+                toast.error(err.response.data.error || err);
+                if( err.response && err.response.data.redirect){
+                    console.log("Redirecting to ",err.response.redirect);
+                    navigate(err.response.data.redirect);
+                }
             }
         }
 

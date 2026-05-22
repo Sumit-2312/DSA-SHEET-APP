@@ -61,19 +61,61 @@ export async function JudgeRequest(
   try {
 
 
-    const response = await axios.post(
-      `${JUDGE0_URL}/submissions?base64_encoded=true&wait=true`,
+    const submitresponse = await axios.post(
+      `${JUDGE0_URL}/submissions?base64_encoded=true&wait=false`,
       body,
       {
         headers: {
           "Content-Type": "application/json",
         },
+        timeout: 20000, 
       }
     );
 
-    console.log(`Raw judge0 response : ${JSON.stringify(response.data)}`);
+    const token = submitresponse.data.token;
 
-    const data = response.data;
+    let result: Judge0ResponseType | undefined;
+    const MAX_RETRIES = 15;
+    let attempts = 0;
+
+    while(attempts < MAX_RETRIES){
+
+        attempts++;
+
+        await new Promise(
+            r => setTimeout(r,1000)
+        );
+
+        const response =
+          await axios.get(
+            `${JUDGE0_URL}/submissions/${token}?base64_encoded=true`,{
+              timeout:10000
+            }
+          );
+
+        result = response.data;
+
+        if(
+          result?.status.id !== 1 &&
+          result?.status.id !== 2
+        ){
+            break;
+        }
+    }
+
+    if(
+      !result ||
+      result.status.id===1 ||
+      result.status.id===2
+    ){
+      throw new Error(
+          "Judge execution timeout"
+      );
+    }
+
+    console.log(`Raw judge0 response : ${JSON.stringify(result)}`);
+
+    const data = result;
 
     // decode only fields that are base64 encoded
     const decoded: Judge0ResponseType = {
@@ -83,7 +125,7 @@ export async function JudgeRequest(
       compile_output: data.compile_output
         ? decodeFromBase64(data.compile_output)
         : null,
-      judgemessage : data.message,
+      judgemessage : data.message || "",
       success: true
     };
 

@@ -1,4 +1,4 @@
-import { Folders, Question, Users } from "@repo/database/db";
+import { Folders, Question, Sheets, Users } from "@repo/database/db";
 import type { basicResponseType } from "@repo/types/apiResponse/basicResponseType";
 import type {addQuestionResponseType} from "@repo/types/apiResponse/addQuestionResponseType";
 import type { Response } from "express";
@@ -49,7 +49,6 @@ export const addQuestion = async(req:any,res:Response) =>{
                 }
                 return res.status(400).json(response);
             }
-
             const Folder = await Folders.findOne({_id:folderId});
 
             if(!Folder){
@@ -60,14 +59,17 @@ export const addQuestion = async(req:any,res:Response) =>{
                 return res.status(404).json(response);
             }
 
-            if(Folder.childFolders.length > 0 ){
-                const response:basicResponseType = {
+            const sheetFromDb = await Sheets.findById(sheetId);
+            if( !sheetFromDb ){
+                const response: basicResponseType = {
                     success: false,
-                    error: "Cannot add question to a folder that has child folders"
+                    error: "no sheet found"
                 }
                 return res.status(400).json(response);
             }
 
+
+            // add question to database
             const newQuestion = await Question.create({
                 title: question.title,
                 difficulty: question.difficulty,
@@ -80,18 +82,20 @@ export const addQuestion = async(req:any,res:Response) =>{
                 createdBy: userFromDb._id.toString()
             });
 
-            const response:addQuestionResponseType ={
+            const response:addQuestionResponseType = {
                 success: true,
-                id: newQuestion._id.toString(),
-                title: newQuestion.title,
-                difficulty: newQuestion.difficulty || "easy",
-                link: newQuestion.link,
-                resourceLink: newQuestion.resourceLink,
-                notes: newQuestion.notes,
-                sheetId: newQuestion.sheetId.toString(),
-                folderId: newQuestion.folderId.toString() ,
-                createdBy: newQuestion.createdBy?.toString() || "",
-                platform: newQuestion.platform || ""
+                Question: {
+                    id: newQuestion._id.toString(),
+                    title: newQuestion.title,
+                    difficulty: newQuestion.difficulty || "easy",
+                    link: newQuestion.link,
+                    resourceLink: newQuestion.resourceLink,
+                    notes: newQuestion.notes,
+                    sheetId: newQuestion.sheetId.toString(),
+                    folderId: newQuestion.folderId.toString() ,
+                    platform: newQuestion.platform || "",
+                    done : newQuestion.done || false
+                }
              }
                 return res.status(200).json(response);
         }

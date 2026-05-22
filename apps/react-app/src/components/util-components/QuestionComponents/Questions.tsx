@@ -1,16 +1,18 @@
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
 import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 
-import type { Folder } from '@repo/types/apiResponse/getSheetDataResponseType';import QuestionItem from "./QuestionItem";
-import { addQuestionModalState } from "../../../recoilstates/question/questionModalStates";
+import type { Folder } from '@repo/types/apiResponse/getSheetDataResponseType';
+import QuestionItem from "./QuestionItem";
+import { solvedQuestionsCountState } from "../../../recoilstates/sheet/sheetSelectors";
+import { questionsState } from "../../../recoilstates/sheet/currentSheetContent";
+
+
 
 function Questions() {
   const currFolder = useRecoilValue<Folder|null>(currentFolder);
-  const openModal = useSetRecoilState(addQuestionModalState);
-
-  const total = currFolder?.questions?.length || 0;
-  const solved =
-    currFolder?.questions?.filter((q) => q.done)?.length || 0;
+  const solved = useRecoilValue(solvedQuestionsCountState); // selector for current folder solved question count which return functioin
+  const total = currFolder?.questionIds?.length || 0;
+  const questionMap = useRecoilValue(questionsState);
 
   return (
     <div className="h-full flex flex-col bg-[#0f172a] text-white">
@@ -28,20 +30,12 @@ function Questions() {
           </p>
         </div>
 
-        {/* RIGHT */}
-        <button
-          onClick={() => openModal(true)}
-          className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 text-sm"
-        >
-          Add Question
-        </button>
-      </div>
-
+    </div>
       {/* Questions List */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 no-scrollbar">
-        {currFolder?.questions?.length ? (
-          currFolder.questions.map((ques) => (
-            <QuestionItem key={ques.id} ques={ques} />
+        {currFolder?.questionIds?.length ? (
+          currFolder.questionIds.map((quesId) => (
+            <QuestionItem ques={questionMap[quesId]} />
           ))
         ) : (
           <div className="text-gray-400 text-sm text-center mt-10">

@@ -1,3 +1,4 @@
+import type { Question } from "@repo/types/apiResponse/getSheetDataResponseType";
 import { atom } from "recoil";
 
 export const addResourceModalState = atom<boolean>({
@@ -11,7 +12,7 @@ export const notesModalState = atom<boolean>({
 });
 
 // which question is currently being edited
-export const activeQuestionState = atom<any | null>({
+export const activeQuestionState = atom<Question | null>({
   key: "activeQuestionState",
   default: null,
 });

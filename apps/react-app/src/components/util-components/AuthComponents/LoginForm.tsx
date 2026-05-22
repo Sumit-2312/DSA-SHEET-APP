@@ -51,15 +51,9 @@ export default function LoginForm() {
 
     }catch(err:unknown){
         if (isAxiosError(err)) {
-            if(  err.response?.data.redirect ){ 
-                toast.error("Session expired. Please login again.");
-                localStorage.removeItem("token");
-                navigate("/login");
-                return;
-            }
-            console.log(err.response?.data?.message || err.message);
+            console.log(err.response?.data || err.message);
             toast.update(id,{
-                render: err.response?.data?.message || err.message,
+                render: err.response?.data?.error || err.message,
                 type:"error",
                 isLoading: false,
                 autoClose: 3000 

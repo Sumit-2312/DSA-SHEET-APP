@@ -6,8 +6,8 @@ import { toast } from "react-toastify";
 import { addQuestionModalState } from "../../../recoilstates/question/questionModalStates";
 import type { addQuestionRequestType } from "@repo/types/apiRequests/addQuestionRequestType";
 import { currentFolder } from "../../../recoilstates/folders/currentFolder";
-import { currentSheetContent } from "../../../recoilstates/sheet/currentSheetContent";
-import type { Folder, Question } from "@repo/types/apiResponse/getSheetDataResponseType";
+import { sheetMetaState,questionsState,foldersState } from "../../../recoilstates/sheet/currentSheetContent";
+import type { Question } from "@repo/types/apiResponse/getSheetDataResponseType";
 
 
 
@@ -15,7 +15,9 @@ import type { Folder, Question } from "@repo/types/apiResponse/getSheetDataRespo
 function AddQuestionModal() {
   const [open, setOpen] = useRecoilState(addQuestionModalState);
   const [curr_folder,setCurrFolder] = useRecoilState(currentFolder);
-  const [currSheetData, setCurrSheetData] = useRecoilState(currentSheetContent);
+  const [sheetDetails, ] = useRecoilState(sheetMetaState);
+  const [,setQuestionMap] = useRecoilState(questionsState);
+  const [,setFolderMap] = useRecoilState(foldersState);
 
   const [form, setForm] = useState({
     title: "",
@@ -26,28 +28,6 @@ function AddQuestionModal() {
     difficulty: "" as "easy" | "medium" | "hard" | ""
   });
 
-  const updateQuestionsInSheet = (
-    folders: Folder[],
-    newQuestion: Question
-  ): Folder[] => {
-    return folders.map((folder) => {
-      if (folder.id === newQuestion.folderId) {
-        return {
-          ...folder,
-          questions: [...(folder.questions || []), newQuestion],
-        };
-      }
-
-      if (!folder.childFolders || folder.childFolders.length === 0) {
-        return folder;
-      }
-
-      return {
-        ...folder,
-        childFolders: updateQuestionsInSheet(folder.childFolders, newQuestion),
-      };
-    });
-  };
 
   const close = () => {
     setOpen(false);
@@ -84,13 +64,13 @@ function AddQuestionModal() {
 
       console.log("Current folder before adding question:", curr_folder);
 
-      if(curr_folder.childFolders.length > 0 ){
+      if(curr_folder.childFolderIds.length > 0 ){
         toast.error("To Added question, folder should not have any subFolders");
         toast.error("Please move subFolders to other folder or create new folder to add question");
         return;
       }
 
-      const sheetId = currSheetData?.id ?? "";
+      const sheetId = sheetDetails?.id ?? "";
 
       const body: {
         sheetId: string;
@@ -124,34 +104,33 @@ function AddQuestionModal() {
       if (res.data.success) {
         toast.success("Question added successfully");
 
-        const newQuestion: Question = {
-          id: res.data.questionId,
-          title: form.title,
-          platform: form.platform,
-          difficulty: form.difficulty,
-          link: form.link,
-          resourceLink: form.resource || "",
-          notes: form.notes,
-          done: false,
-          folderId: curr_folder.id,
-          sheetId,
-        };
+        const newQuestion : Question  = res.data.Question;
 
-        setCurrSheetData((prev) => {
-          if (!prev) return prev;
+        // add the question in question Map 
+        setQuestionMap((prev)=>{
+          return {...prev,[newQuestion.id]: res.data.Question}
+        })
+
+        // update the folder in folderMap 
+        setFolderMap((prev)=>{
+          const folderToUpdate = prev[curr_folder.id];
+          if(!folderToUpdate) return prev;
+
+          const updatedFolder = {
+            ...folderToUpdate,
+            questionIds: [...(folderToUpdate.questionIds || []), newQuestion.id]
+          }
+          return {...prev,[curr_folder.id]: updatedFolder}
+        })
+
+       // update the current folder state
+        setCurrFolder((prev)=>{ 
+          if(!prev) return prev;
           return {
             ...prev,
-            Folders: updateQuestionsInSheet(prev.Folders, newQuestion),
-          };
-        });
-
-        setCurrFolder((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            questions: [...(prev.questions || []), newQuestion],
-          };
-        });
+            questionIds: [...(prev.questionIds || []), newQuestion.id]
+          }
+        })
 
         close();
       } else {

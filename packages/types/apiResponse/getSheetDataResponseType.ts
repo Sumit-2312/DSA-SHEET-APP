@@ -17,22 +17,20 @@ export interface Folder{
 	id: string,
 	name: string,
 	parentFolderId: string|null,
-	questions: Question[]
-	childFolders: Folder[]
-}
-
-export interface SheetDataType {
-	id: string,
-	name: string,
-	solvedQuestionsCount: string,
-	solvedQuestionsIds: string[],
-	Folders: Folder[]
+	sheetId: string,
+	questionIds: string[]
+	childFolderIds: string[]
 }
 
 export interface getSheetDataResponseType extends basicResponseType {
-	id: string,
-	name: string,
-	solvedQuestionsCount: string,
-	solvedQuestionsIds: string[],
-	Folders: Folder[]
+	sheetDetails?: {
+		id: string,
+		name: string,
+	},
+	Folders?: Record<string,Folder>,
+	Questions?: Record<string, Question>,
+	rootFolderId?: string,
+	totalQuestions?: number,
+	solvedQuestionsCount?: number,
+	solvedQuestionsIds?: string[]	
 }

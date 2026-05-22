@@ -7,7 +7,7 @@ import { activeQuestionState, notesModalState } from "../../../recoilstates/ques
 function NotesModal() {
   const [open, setOpen] = useRecoilState(notesModalState);
   const question = useRecoilValue(activeQuestionState);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(question?.notes || "");
 
   const close = () => {
     setOpen(false);

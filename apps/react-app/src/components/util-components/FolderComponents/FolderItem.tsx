@@ -7,7 +7,8 @@ import { addFolderModalState } from "../../../recoilstates/folders/addFolderModa
 import { addQuestionModalState } from "../../../recoilstates/question/questionModalStates";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { currentSheetContent } from "../../../recoilstates/sheet/currentSheetContent";
+import { foldersState, sheetMetaState } from "../../../recoilstates/sheet/currentSheetContent";
+import { renameFolderState } from "../../../recoilstates/sheet/renameFolder";
 
 type Props = {
   folder: FolderType;
@@ -20,11 +21,13 @@ type Props = {
 
 function FolderItem({ folder, onSelect }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const curr_folder = useRecoilValue(currentFolder);
+  const [curr_folder,setCurrFolder] = useRecoilState(currentFolder);
   const [renameAndRemoveOpen,setRenameAndRemoveOpen] = useState(false);
   const [,setAddFolderModalOpenState] = useRecoilState(addFolderModalState);
   const setAddQuestionModalOpenState = useSetRecoilState(addQuestionModalState);
-  const [sheetData,setSheetData] = useRecoilState(currentSheetContent);
+  const [,setRenameFolderModalState] = useRecoilState(renameFolderState);
+  const foldersMap = useRecoilValue(foldersState);
+  const sheetDetails = useRecoilValue(sheetMetaState);
 
   const handleClick = () => {
     setIsOpen((prev) => !prev);
@@ -89,9 +92,11 @@ function FolderItem({ folder, onSelect }: Props) {
 
           return {
             ...prev,
+            totalQuestions: prev.totalQuestions - data.deletedCount,
             Folders: updatedFolders,
           };
         });
+        setCurrFolder(null);
       } catch (error) {
         console.error(error);
         toast.error(error.res.data.error);
@@ -108,7 +113,7 @@ function FolderItem({ folder, onSelect }: Props) {
         className={`${folder.id === curr_folder?.id ? "bg-blue-900":""}  group relative flex items-center gap-2 cursor-pointer hover:bg-gray-800 px-2 py-1 rounded transition-colors`}
       >
         {/* Arrow */}
-        {folder.childFolders && folder.childFolders.length > 0 && (
+        {folder.childFolderIds && folder.childFolderIds.length > 0 && (
           <ChevronDown
             size={16}
             className={`transition-transform duration-200 ${
@@ -130,8 +135,23 @@ function FolderItem({ folder, onSelect }: Props) {
         {
           renameAndRemoveOpen && 
           <div onMouseLeave={()=>setRenameAndRemoveOpen(false)} className=" bg-black py-2 select-none absolute top-[100%] right-1 z-[400] flex flex-col">
-            <div className="hover:bg-gray-600 w-full px-5 py-2">Rename</div>
-            <div 
+            
+            {/* Rename */}
+            {
+              folder.id != sheetDetails?.id &&
+              <div onClick={()=>{
+                  setRenameFolderModalState({
+                    isOpen: true,
+                    folderId: folder.id,
+                    folderName: folder.name
+                  })
+                }} className="hover:bg-gray-600 w-full px-5 py-2">
+                  Rename
+              </div>
+            }
+
+            {/* Delete */}
+           { folder.id != sheetDetails.id  &&  <div 
               onClick={()=>{
                 handleDeleteFolder();
                 setRenameAndRemoveOpen(false);
@@ -139,17 +159,24 @@ function FolderItem({ folder, onSelect }: Props) {
               className="hover:bg-gray-600 w-full px-5 py-2"
             >
               Delete
-            </div>
-              <div 
-                  onClick={()=>{
-                    setAddFolderModalOpenState(true);
-                    setRenameAndRemoveOpen(false);
-                  }} 
-                  className="hover:bg-gray-600 w-full px-5 py-2"
-                >
-                  Add Folder
-                </div>
-              <div 
+            </div>}
+
+              {/* Add Folder */}
+             { folder.questionIds.length === 0 &&
+                <div 
+                    onClick={()=>{
+                      setAddFolderModalOpenState(true);
+                      setRenameAndRemoveOpen(false);
+                    }} 
+                    className="hover:bg-gray-600 w-full px-5 py-2"
+                  >
+                    Add Folder
+                  </div>
+              }
+
+              {/* Add Question */}
+              { folder.childFolderIds.length === 0 &&
+                <div 
                 onClick={()=>{
                   setAddQuestionModalOpenState(true);
                   setRenameAndRemoveOpen(false);
@@ -157,19 +184,19 @@ function FolderItem({ folder, onSelect }: Props) {
                 className="hover:bg-gray-600 w-full px-5 py-2"
               >
                   Add Question
-              </div>
+              </div>}
           </div>
         }
 
       </div>
 
       {/* Children (Recursive) */}
-      {isOpen && folder.childFolders && folder.childFolders.length > 0 && (
+      {isOpen && folder.childFolderIds && folder.childFolderIds.length > 0 && (
         <div className="ml-4 border-l border-gray-700 pl-2">
-          {folder.childFolders.map((child) => (
+          {folder.childFolderIds.map((childId) => (
             <FolderItem
-              key={child.id}  
-              folder={child}
+              key={childId}  
+              folder={foldersMap[childId]}
               onSelect={onSelect}
             />
           ))}

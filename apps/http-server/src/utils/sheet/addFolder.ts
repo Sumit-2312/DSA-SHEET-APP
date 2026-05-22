@@ -30,7 +30,6 @@ export const addFolder = async(req:any,res:Response) =>{
         if( parentFolderId === sheetId ){
             const newFolder = await Folders.create({
                 name: name,
-                childFolders: [],
                 sheetId: sheetId,
                 parentFolderId: null,
                 createdBy: userFromDb?.id || null
@@ -39,13 +38,14 @@ export const addFolder = async(req:any,res:Response) =>{
             const response: addFolderResponseType = {
                 success: true,
                 message: "Folder added successfully",
-                id: newFolder._id.toString(),
-                name: newFolder.name,
-                sheetId: sheetId,
-                parentFolderId: sheetId,
-                childFolders:[],
-                questions:[],
-                createdBy: userFromDb?._id.toString() || ""
+                Folder:{
+                    id: newFolder._id.toString(),
+                    name: newFolder.name,
+                    sheetId: sheetId,
+                    parentFolderId: sheetId,
+                    childFolderIds:[],
+                    questionIds:[]
+                }
             }
 
             return res.status(200).json(response);
@@ -62,15 +62,13 @@ export const addFolder = async(req:any,res:Response) =>{
             return res.status(200).json(response);
         }
 
-        const childFoldersOfParentFolder = parentFolderFromDb.childFolders.length
+        const childFoldersOfParentFolder = await Folders.find({parentFolderId: parentFolderId}).countDocuments();
         const order = childFoldersOfParentFolder == 0 ? 1 : childFoldersOfParentFolder;
-
 
         const dataForNewFolder = {
             name: name,
             sheetId: sheetId,
             parentFolderId: parentFolderId,
-            childFolders: [],
             order: order,
             createdBy: userFromDb?._id ?? null
         }
@@ -80,13 +78,14 @@ export const addFolder = async(req:any,res:Response) =>{
         const response:addFolderResponseType ={
                 success: true,
                 message: "Folder added successfully",
-                id: newFolder._id.toString(),
-                name: newFolder.name,
-                sheetId: sheetId,
-                parentFolderId: parentFolderId,
-                childFolders:[],
-                questions:[],
-                createdBy: userFromDb?._id.toString() || ""
+                Folder:{
+                    id: newFolder._id.toString(),
+                    name: newFolder.name,
+                    sheetId: sheetId,
+                    parentFolderId: parentFolderId,
+                    childFolderIds:[],
+                    questionIds:[]
+                }
         }
 
         return res.status(200).json(response);

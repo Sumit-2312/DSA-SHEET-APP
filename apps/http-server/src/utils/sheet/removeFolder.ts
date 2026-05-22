@@ -1,50 +1,26 @@
-import { Folders, Question } from "@repo/database/db";
+import { Folders, Question, Sheets } from "@repo/database/db";
 import type { Response } from "express";
 
 
 
-const deleteAllData = async (folder: any) => {
+const deleteAllData = async (folder: any): Promise<number> => {
 
-    if (!folder) return;
-
+    if (!folder) return 0;
     // Delete all questions in this folder
-
-    await Question.deleteMany({ folderId: folder._id });
-
+    let deletedQuestions = 0;
+    // this line will delete all questions in the folder and return the count of deleted questions
+    deletedQuestions += (await Question.deleteMany({ folderId: folder._id })).deletedCount;
     //  Recursively delete child folders
 
-    if (folder.childFolders && folder.childFolders.length > 0) {
+    const childFolders = await Folders.find({ parentFolderId: folder._id });
 
-        const childFolders = await Folders.find({
-            _id: { $in: folder.childFolders }
-        });
-
-        for (const child of childFolders) {
-            await deleteAllData(child);
-        }
-
+    for (const child of childFolders) {
+        deletedQuestions += await deleteAllData(child);
     }
-
-    // Remove reference from parent folder
-
-    if (folder.parentFolderId) {
-
-        await Folders.findByIdAndUpdate(
-
-            folder.parentFolderId,
-
-            {
-                $pull: { childFolders: folder._id }
-            }
-
-        );
-
-    }
-
+    
     // 4. Delete the folder itself
-
     await Folders.findByIdAndDelete(folder._id);
-
+    return deletedQuestions;
 };
 
 
@@ -78,11 +54,18 @@ export const removeFolder = async (req: any, res: Response) => {
             });
         }
 
-        await deleteAllData(folderFromDb);
+        const countOfQuestionDeleted = await deleteAllData(folderFromDb);
+
+        // now decrease these many questions from the sheet 
+        const sheetFromDb = await Sheets.updateOne(
+            {_id : folderFromDb.sheetId},
+            {totalQuestions: { $subtract: ["$totalQuestions", countOfQuestionDeleted] }}
+        )
 
         return res.status(200).json({
             success: true,
-            message: "Folder and all related data deleted successfully"
+            message: "Folder and all related data deleted successfully",
+            deletedCount: countOfQuestionDeleted
         });
 
     } catch (error) {

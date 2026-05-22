@@ -7,41 +7,20 @@ import { toast } from "react-toastify";
 import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { currentSheetContent } from "../../../recoilstates/sheet/currentSheetContent";
+import { foldersState } from "../../../recoilstates/sheet/currentSheetContent";
 import type {addFolderResponseType} from '@repo/types/apiResponse/addFolderResponseType'
 import type { Folder } from "@repo/types/apiResponse/getSheetDataResponseType";
+
 
 function AddNewFolderComponent() {
   const [isOpen, setIsOpen] = useRecoilState(addFolderModalState);
   const [folderName, setFolderName] = useState("");
   const [curr_folder,] = useRecoilState(currentFolder);
-  const [,setCurrSheetContent] = useRecoilState(currentSheetContent);
+  const [,setFolderMap] = useRecoilState(foldersState);
   const Navigate = useNavigate()
   const {id} = useParams()
 
-  const addFolderRecursively = (
-    folders: Folder[],
-    newFolder: Folder,
-    parentId: string
-  ): Folder[] => {
-  return folders.map((folder) => {
-    if (folder.id === parentId) {
-      return {
-        ...folder,
-        childFolders: [...folder.childFolders, newFolder]
-      };
-    }
 
-    return {
-      ...folder,
-      childFolders: addFolderRecursively(
-        folder.childFolders,
-        newFolder,
-        parentId
-      )
-    };
-  });
-  };
 
   const handleClose = () => {
     setIsOpen(false);
@@ -56,7 +35,7 @@ function AddNewFolderComponent() {
     if(!curr_folder){
       toast.info("Must select the folder");
     }
-    if(curr_folder.questions.length > 0 ){
+    if(curr_folder.childFolderIds.length > 0 ){
       toast.error("SubFolders can only be added in folders which doesn't have any question, Please move questions to other folder or create subfolder to add question");
       return;
     }
@@ -87,41 +66,9 @@ function AddNewFolderComponent() {
 
     toast.success("Added folder successFully");
 
-    setCurrSheetContent((sheet) => {
-
-      if (!sheet) return sheet;
-
-      const newFolder: Folder = {
-
-        id: data.id,
-
-        name: data.name,
-
-        parentFolderId: data.parentFolderId,
-
-        questions: data.questions,
-
-        childFolders: data.childFolders
-
-      };
-
-      return {
-
-        ...sheet,
-
-        Folders: addFolderRecursively(
-
-          sheet.Folders,
-
-          newFolder,
-
-          data.parentFolderId
-
-        )
-
-      };
-
-    });
+    // update the folder state with the new folder
+    const newFolder: Folder = data.Folder;
+    setFolderMap((prev) => ({ ...prev, [newFolder.id]: newFolder }));
 
     handleClose();
   };

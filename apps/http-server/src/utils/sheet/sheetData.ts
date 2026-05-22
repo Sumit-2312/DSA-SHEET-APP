@@ -1,195 +1,175 @@
 import type { Response } from "express";
-import type { Folder, getSheetDataResponseType, Question as QuestionType } from '@repo/types/apiResponse/getSheetDataResponseType';
+import type {
+  getSheetDataResponseType,
+  Question as QuestionType,
+  Folder as FolderNormalized
+} from "@repo/types/apiResponse/getSheetDataResponseType";
 import type { basicResponseType } from "@repo/types/apiResponse/basicResponseType";
 import { Folders, Question, Sheets, Users } from "@repo/database/db";
 
-function buildFolder(
-    folder: any,
-    parentFolderId: string | null,
-    folderChildMap: Map<string, any[]>,
-    folderQuestionMap: Map<string, any[]>
-): Folder {
 
-    let finalFolder: Folder = {
-        id: folder._id.toString(),
-        name: folder.name,
-        parentFolderId: parentFolderId,
-        questions: [],
-        childFolders: []
+export const sheetData = async (req: any, res: Response) => {
+  const { email } = req.user;
+
+  if (!email) {
+    const response: basicResponseType = {
+      success: false,
+      error: "User not found",
+      redirect: "/login"
     };
+    return res.status(400).json(response);
+  }
 
-    const folderId = folder._id.toString();
-    const children = folderChildMap.get(folderId) || [];
+  try {
+    const { id } = req.query;
 
-    // attach questions (you can allow both cases)
-    const qs = folderQuestionMap.get(folderId) || [];
-    finalFolder.questions = qs.map((q): QuestionType => ({
-        id: q._id.toString(),
+    if (!id) {
+      const response: basicResponseType = {
+        success: false,
+        error: "Id is not provided"
+      };
+      return res.status(400).json(response);
+    }
+
+    //  Get user
+    const userFromDb = await Users.findOne({ email });
+    const userId = userFromDb?._id;
+
+    if (!userId) {
+      const response: basicResponseType = {
+        success: false,
+        error: "User not found in database"
+      };
+      return res.status(400).json(response);
+    }
+
+    //  Fetch all data in parallel
+    const [questions, folders, sheetFormDb] = await Promise.all([
+      Question.find({ createdBy: userId, sheetId: id }),
+      Folders.find({ createdBy: userId, sheetId: id }),
+      Sheets.findById(id)
+    ]);
+
+    if (!sheetFormDb) {
+      const response: basicResponseType = {
+        success: false,
+        error: "No such sheet exist"
+      };
+      return res.status(404).json(response);
+    }
+
+    // ============================
+    //  NORMALIZATION STARTS HERE
+    // ============================
+
+    const folderMap: Record<string, FolderNormalized> = {};
+    const questionMap: Record<string, QuestionType> = {};
+    const ActualrootFolders: string[] = []
+
+    // 1. Normalize Questions
+    let solvedQuestionsCount = 0;
+    const solvedQuestionsIds: string[] = [];
+
+    questions.forEach((q) => {
+      const qId = q._id.toString();
+
+      const normalizedQuestion: QuestionType = {
+        id: qId,
         title: q.title,
         link: q.link,
         resourceLink: q.resourceLink,
         notes: q.notes,
-        platform: q.platform,
-        difficulty: q.difficulty,
+        platform: q.platform as string,
+        difficulty: q.difficulty as "easy" | "medium" | "hard",
         folderId: q.folderId?.toString(),
         sheetId: q.sheetId?.toString(),
         done: q.done
-    }));
+      };
 
-    // recursively build children
-    finalFolder.childFolders = children.map((child) =>
-        buildFolder(child, folderId, folderChildMap, folderQuestionMap)
-    );
+      questionMap[qId] = normalizedQuestion;
 
-    return finalFolder;
-}
+      if (q.done) {
+        solvedQuestionsCount++;
+        solvedQuestionsIds.push(qId);
+      }
+    });
 
-export const sheetData = async (req: any, res: Response) => {
-    const { email } = req.user;
+    // 2. Initialize folders
+    folders.forEach((f) => {
+      const fId = f._id.toString();
 
-    if (!email) {
-        const response: basicResponseType = {
-            success: false,
-            error: "User not found",
-            redirect: "/login"
-        };
-        return res.status(400).json(response);
-    }
+      folderMap[fId] = {
+        id: fId,
+        name: f.name,
+        parentFolderId: f.parentFolderId?.toString() || null,
+        sheetId: f.sheetId?.toString(),
+        childFolderIds: [],
+        questionIds: []
+      };
+    });
 
-    try {
-        const { id } = req.query;
+    // 3. Build folder relationships (parent → children)
+    folders.forEach((f) => {
+      const fId = f._id.toString();
+      const parentId = f.parentFolderId?.toString();
 
-        if (!id) {
-            const response: basicResponseType = {
-                success: false,
-                error: "Id is not provided"
-            };
-            return res.status(400).json(response);
-        }
+      if (parentId && folderMap[parentId]) {
+        folderMap[parentId].childFolderIds.push(fId);
+      } else {
+        ActualrootFolders.push(fId);
+      }
+    });
 
-        const userFromDb = await Users.findOne({ email: email });
-        const userId = userFromDb?._id;
+    // 4. Attach questions to folders
+    questions.forEach((q) => {
+      const fId = q.folderId?.toString();
+      const qId = q._id.toString();
 
-        if (!userId) {
-            const response: basicResponseType = {
-                success: false,
-                error: "User not found in database"
-            };
-            return res.status(400).json(response);
-        }
+      if (fId && folderMap[fId]) {
+        folderMap[fId].questionIds.push(qId);
+      }
+    });
 
-        // fetch all data in parallel
-        const [questions, folders] = await Promise.all([
-            Question.find({ createdBy: userId, sheetId : id }),
-            Folders.find({ createdBy: userId , sheetId : id })
-        ]);
+    // 5. Create virtual root (sheet as root folder)
+    const VirtualRootFolderId = sheetFormDb._id.toString();
 
+    folderMap[VirtualRootFolderId] = {
+      id: VirtualRootFolderId,
+      name: sheetFormDb.name,
+      parentFolderId: null,
+      sheetId: VirtualRootFolderId,
+      childFolderIds: ActualrootFolders,
+      questionIds: []
+    };
 
-        //Build Maps
+    // ============================
+    // FINAL RESPONSE
+    // ============================
 
-        // folderId -> questions
-        const folderQuestionMap = new Map<string, any[]>();
+    const response: getSheetDataResponseType = {
+      success: true,
+      sheetDetails: {
+        id: VirtualRootFolderId,
+        name: sheetFormDb.name
+      },
+      Folders: folderMap,
+      Questions: questionMap,
+      rootFolderId: VirtualRootFolderId,
+      totalQuestions: questions.length,
+      solvedQuestionsCount,
+      solvedQuestionsIds
+    };
 
-        questions.forEach((q) => {
-            const key = q.folderId?.toString();
-            if (!key) return;
+    return res.status(200).json(response);
 
-            if (!folderQuestionMap.has(key)) {
-                folderQuestionMap.set(key, []);
-            }
-            folderQuestionMap.get(key)!.push(q);
-        });
+  } catch (err) {
+    console.log("Error fetching sheet data", err);
 
-        // parentId -> child folders
-        const folderChildMap = new Map<string, any[]>();
+    const response: basicResponseType = {
+      success: false,
+      error: "Internal Server Error"
+    };
 
-        folders.forEach((f) => {
-            const parentId = f.parentFolderId?.toString();
-
-            if (parentId) {
-                if (!folderChildMap.has(parentId)) {
-                    folderChildMap.set(parentId, []);
-                }
-                folderChildMap.get(parentId)!.push(f);
-            }
-        });
-
-        // fetch the respective Sheet
-        const sheetFormDb = await Sheets.findById(id);
-
-        if(!sheetFormDb){
-            const response:basicResponseType = {
-                success: false,
-                error: "No such sheet exist"
-            }
-            return res.status(200).json(response);
-        }
-
-
-        //Root Folders
-        const rootFolders = folders.filter(
-            (fold) => fold.parentFolderId === null
-        );
-
-
-        // Build Tree
-        const finalFolders: Folder[] = rootFolders.map((folder) =>
-            buildFolder(folder, null, folderChildMap, folderQuestionMap)
-        );
-
-
-        // add parent folder id to all root folders
-        const updatedFinalFolders = finalFolders.map((folder)=>{
-            return {
-                ...folder,
-                parentFolderId: sheetFormDb._id.toString()
-            }
-        })
-
-
-
-        // parent folder
-        const parentFolder:Folder = {
-            id: sheetFormDb._id.toString(),
-            name: sheetFormDb.name,
-            parentFolderId: null,
-            questions:[],
-            childFolders: updatedFinalFolders
-        }
-
-
-        // Solved Count
-        let solvedQuestionsCount = 0;
-        const solvedQuestionsIds: string[] = [];
-
-
-        questions.forEach((q) => {
-            if (q.done) { 
-                solvedQuestionsCount++;
-                solvedQuestionsIds.push(q._id.toString());
-            }
-        });
-
-        // Final Response
-        const response: getSheetDataResponseType = {
-            success: true,
-            id: id,
-            name: sheetFormDb.name, // replace if you store sheet name
-            solvedQuestionsCount: solvedQuestionsCount.toString(),
-            solvedQuestionsIds: solvedQuestionsIds,
-            Folders: [parentFolder]
-        };
-
-        return res.status(200).json(response);
-
-    } catch (err) {
-        console.log("Error fetching sheet data", err);
-
-        const response: basicResponseType = {
-            success: false,
-            error: "Internal Server Error"
-        };
-
-        return res.status(500).json(response);
-    }
+    return res.status(500).json(response);
+  }
 };

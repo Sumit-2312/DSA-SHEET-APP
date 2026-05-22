@@ -2,19 +2,21 @@ import { ErrorBoundary } from "react-error-boundary";
 import SheetFallback from "../FallbackUI/SheetPage-fallback";
 import {  useEffect, useRef, useState } from "react";
 
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import Questions from "../util-components/QuestionComponents/Questions";
 import AddNewFolderComponent from "../util-components/FolderComponents/addNewFolderComponent";
 import AddQuestionModal from "../util-components/QuestionComponents/addQuestionComponent";
 import AddResourceModal from "../util-components/QuestionComponents/addResourceModal";
 import NotesModal from "../util-components/QuestionComponents/notesModal";
 import Folders from "../util-components/FolderComponents/Folders";
-import { currentSheetContent } from "../../recoilstates/sheet/currentSheetContent";
+import { sheetMetaState,rootFolderIdState,foldersState,questionsState,solvedQuestionIdsState } from "../../recoilstates/sheet/currentSheetContent";
 import { addFolderModalState } from "../../recoilstates/folders/addFolderModalState";
 import { useNavigate, useParams } from "react-router-dom";
 import axios, { type AxiosResponse } from "axios";
-import type { getSheetDataResponseType, SheetDataType } from "@repo/types/apiResponse/getSheetDataResponseType";
+import type { getSheetDataResponseType } from "@repo/types/apiResponse/getSheetDataResponseType";
 import { toast } from "react-toastify";
+import RenameFolderModal from "../util-components/FolderComponents/renameFolderModal";
+
 
 
 
@@ -29,9 +31,13 @@ const MAX_FOLDERS_WIDTH = 50; // vw
 function Sheet() {
   const [folder_width, setFolderWidth] = useState(MIN_FOLDERS_WIDTH);
   const [, setDragging] = useState(false);
-  const [,setCurrentSheetContent] = useRecoilState(currentSheetContent);
+  const [,setSheetDetails] = useRecoilState(sheetMetaState);
+  const [,setRootFolderId] = useRecoilState(rootFolderIdState);
+  const [,setFoldersState] = useRecoilState(foldersState);
+  const [,setQuestionsState] = useRecoilState(questionsState);
+  const [, setSolvedQuestionIds] = useRecoilState(solvedQuestionIdsState);
   const containerRef = useRef(null);
-  const [IsOpenAddFoldelModal,openAddFolderModal] = useRecoilState(addFolderModalState);
+  const [IsOpenAddFoldelModal,] = useRecoilState(addFolderModalState);
   const Navigate = useNavigate();
   const {id} = useParams();
 
@@ -84,15 +90,11 @@ function Sheet() {
             Navigate(data.redirect);
           }
 
-          setCurrentSheetContent((prev:SheetDataType)=>{
-            return {
-              id: data.id,
-              name: data.name,
-              Folders:data.Folders,
-              solvedQuestionsCount: data.solvedQuestionsCount,
-              solvedQuestionsIds: data.solvedQuestionsIds
-            }
-          })
+          setSheetDetails(data.sheetDetails);
+          setRootFolderId(data.rootFolderId);
+          setFoldersState(data.Folders || {});
+          setQuestionsState(data.Questions || {});
+          setSolvedQuestionIds(data.solvedQuestionsIds || []);
 
           console.log("Fetched the sheet data successfully");
       }catch(err:any){
@@ -157,6 +159,7 @@ function Sheet() {
           <AddResourceModal/>
           <NotesModal/>
           <AddQuestionModal />
+          <RenameFolderModal/>
     </div>
   );
 }
