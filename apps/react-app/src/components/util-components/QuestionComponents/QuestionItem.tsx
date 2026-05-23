@@ -1,5 +1,5 @@
 import type { Question } from "@repo/types/apiResponse/getSheetDataResponseType";
-import { Check, BookOpen } from "lucide-react";
+import { Check, BookOpen, PencilLine } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import {
@@ -27,6 +27,9 @@ function QuestionItem({ ques }: { ques: Question }) {
   const setActiveQuestion = useSetRecoilState(activeQuestionState);
   const [isDisabled, setIsDisabled] = useState(false);
   const [folderMap, setFolderMap] = useRecoilState(foldersState);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(ques.title); 
+
 
   useEffect(()=>{
     console.log(`QuestionItem : { ques: ${ques.title} , questionId: ${ques.id} } rendered `);
@@ -105,6 +108,60 @@ function QuestionItem({ ques }: { ques: Question }) {
     }
   }
 
+const handleNameChange = async () => {
+  const trimmedTitle = editedTitle.trim();
+
+  if (!trimmedTitle || trimmedTitle === ques.title) {
+    setIsEditing(false);
+    setEditedTitle(ques.title);
+    return;
+  }
+
+  try {
+    const response = await axios.patch(
+      `${import.meta.env.VITE_BACKEND_URL}/sheet/question`,
+      {
+        questionId: ques.id,
+        folderId: ques.folderId,
+        sheetId: ques.sheetId,
+        fieldToBeUpdated: {
+          title: trimmedTitle,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const data: basicResponseType = response.data;
+
+    if (!data.success) {
+      throw new Error(data.error || "Failed to update");
+    }
+
+    setQuestionMap((prev) => ({
+      ...prev,
+      [ques.id]: {
+        ...prev[ques.id],
+        title: trimmedTitle,
+      },
+    }));
+
+    toast.success("Title updated", {
+      autoClose: 1000,
+    });
+
+    setIsEditing(false);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update title");
+    setEditedTitle(ques.title);
+    setIsEditing(false);
+  }
+};
+
   useEffect(() => {
     console.log("Resource link:", ques.resourceLink);
   }, [ques.resourceLink]);
@@ -133,10 +190,53 @@ function QuestionItem({ ques }: { ques: Question }) {
 
         {/* Title + Platform */}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium truncate transition-colors text-gray-800 dark:text-gray-100 group-hover:text-blue-500 dark:group-hover:text-blue-400`}>
-            {ques.title}
-          </p>
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{ques.platform}</p>
+          
+          <div className="flex gap-2 items-center group/title">
+
+            {isEditing ? (
+              <input
+                autoFocus
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onBlur={handleNameChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleNameChange();
+                  }
+
+                  if (e.key === "Escape") {
+                    setEditedTitle(ques.title);
+                    setIsEditing(false);
+                  }
+                }}
+                className="text-sm font-medium w-full bg-transparent outline-none border-b border-blue-500 text-gray-800 dark:text-gray-100"
+              />
+            ) : (
+              <>
+                <p className="text-sm font-medium truncate transition-colors text-gray-800 dark:text-gray-100 group-hover/title:text-blue-500">
+                  {questionMap[ques.id]?.title}
+                </p>
+
+                <PencilLine
+                  size={15}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                  className="opacity-0 group-hover/title:opacity-100 transition-opacity cursor-pointer hover:text-blue-500 flex-shrink-0"
+                />
+              </>
+            )}
+
+          </div>
+
+          <div className="flex items-center gap-5 mt-0.5">
+
+            <p className="text-[11px] text-gray-400 dark:text-gray-500">
+              {ques.platform}
+            </p>
+
+          </div>
         </div>
 
         {/* Right cluster */}
@@ -153,12 +253,6 @@ function QuestionItem({ ques }: { ques: Question }) {
               <span>Read</span>
             </Link>
           )}
-
-          {/* Difficulty badge */}
-          <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${getDifficultyStyle(ques.difficulty)}`}>
-            {ques.difficulty}
-          </span>
-
           {/* Solve button */}
           <Link
             to={ques.link}
@@ -192,9 +286,22 @@ function QuestionItem({ ques }: { ques: Question }) {
           </button>
         </div>
 
-        <button onClick={handleDelete} className="text-[12px] text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-3 py-0.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-          Delete
-        </button>
+
+       <div className="flex gap-5 justify-between items-center ">
+          <span
+            className={`text-[10px] font-bold px-3 py-[1px] rounded-full ${getDifficultyStyle(
+              ques.difficulty
+            )}`}
+          >
+              {ques.difficulty[0].toUpperCase() + ques.difficulty.slice(1)}
+          </span>
+          
+          <button onClick={handleDelete} className="text-[12px] text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-3 py-0.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            Delete
+          </button>
+       </div>
+
+
       </div>
     </div>
   );
