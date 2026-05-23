@@ -35,7 +35,7 @@ function AddNewFolderComponent() {
     if(!curr_folder){
       toast.info("Must select the folder");
     }
-    if(curr_folder.childFolderIds.length > 0 ){
+    if(curr_folder.questionIds.length > 0 ){
       toast.error("SubFolders can only be added in folders which doesn't have any question, Please move questions to other folder or create subfolder to add question");
       return;
     }
@@ -43,7 +43,7 @@ function AddNewFolderComponent() {
     console.log(`new folder name : ${folderName} \n ParentFolderName: ${curr_folder.name}`);
     console.log(`name: ${folderName} \n parentFolderId: ${curr_folder.id} \n sheetId: ${id}`)
     
-    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/sheet/addFolder`,{
+    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/sheet/folder`,{
       name: folderName,
       parentFolderId: curr_folder?.id,
       sheetId: id
@@ -68,7 +68,19 @@ function AddNewFolderComponent() {
 
     // update the folder state with the new folder
     const newFolder: Folder = data.Folder;
-    setFolderMap((prev) => ({ ...prev, [newFolder.id]: newFolder }));
+    setFolderMap((prev) => ({
+      ...prev,
+      // add new folder object
+      [newFolder.id]: newFolder,
+      // update parent folder
+      [curr_folder.id]: {
+        ...prev[curr_folder.id],
+        childFolderIds: [
+          ...prev[curr_folder.id].childFolderIds,
+          newFolder.id
+        ]
+    }
+}));
 
     handleClose();
   };

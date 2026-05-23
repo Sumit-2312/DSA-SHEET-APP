@@ -1,23 +1,73 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 
 import { X } from "lucide-react";
 import { activeQuestionState, notesModalState } from "../../../recoilstates/question/questionModalStates";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { questionsState } from "../../../recoilstates/sheet/currentSheetContent";
 
 function NotesModal() {
   const [open, setOpen] = useRecoilState(notesModalState);
   const question = useRecoilValue(activeQuestionState);
-  const [notes, setNotes] = useState(question?.notes || "");
+  const [questionMap, setQuestionMap] = useRecoilState(questionsState);
+  const [notes, setNotes] = useState("");
 
   const close = () => {
     setOpen(false);
     setNotes("");
   };
 
-  const handleSave = () => {
-    console.log("Notes for:", question, notes);
-    close();
+  const handleSave = async() => {
+    try{
+      const response = await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/sheet/question`,{
+        questionId: question?.id,
+        folderId: question?.folderId,
+        sheetId: question?.sheetId,
+        fieldToBeUpdated:{
+          notes: notes
+        }
+      },{
+        headers:{
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      const data = response.data;
+      if( !data.success ){
+        throw new Error(data.error || "Failed to update notes");
+      }
+      toast.success("Notes updated successfully");
+      setQuestionMap((prev)=>{
+        if(question?.id){
+          return {
+            ...prev,
+            [question.id]:{
+              ...prev[question.id],
+              notes: notes
+            }
+          }
+        } else {
+          return prev;
+        }
+      });
+      close();
+    }
+     catch (error:unknown) {
+      if(axios.isAxiosError(error)){
+        const errorMessage = error.response?.data?.error || "Failed to update notes";
+        toast.error(errorMessage);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+      close();
+      return;
+    }
   };
+
+  useEffect(()=>{
+    console.log("Active question in notes modal: ", question);
+    setNotes(questionMap[question?.id]?.notes || "");
+  },[question,open,questionMap]);
 
   if (!open) return null;
 

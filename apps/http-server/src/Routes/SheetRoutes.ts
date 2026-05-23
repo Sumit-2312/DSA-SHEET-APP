@@ -18,12 +18,12 @@ const SheetRouter = express.Router();
 SheetRouter.get('/SheetData', sheetData); // done
 SheetRouter.get('/SheetList', sheetList); 
 SheetRouter.get('/userDetails', userDetails);
-SheetRouter.patch('/question', updateQuestion);
-SheetRouter.post('/addQuestion', addQuestion); // done
-SheetRouter.post('/removeQuestion', removeQuestion);    
-SheetRouter.post('/addFolder',  addFolder); // done
-SheetRouter.post('/updateFolder', updateFolder);
-SheetRouter.post('/removeFolder', removeFolder); 
+SheetRouter.patch('/question', updateQuestion); // done
+SheetRouter.post('/question', addQuestion); // done
+SheetRouter.delete('/question', removeQuestion);    
+SheetRouter.post('/folder',  addFolder); // done
+SheetRouter.patch('/folder', updateFolder);
+SheetRouter.delete('/folder', removeFolder); 
 SheetRouter.post('/createSheet',createSheet); //
 SheetRouter.delete('/Sheet',deleteSheet);
 SheetRouter.patch('/Sheet',updateSheet); //

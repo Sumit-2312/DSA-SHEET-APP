@@ -1,4 +1,4 @@
-import { ChevronDown, User } from 'lucide-react';
+import { BellRing, ChevronDown, User } from 'lucide-react';
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useSetRecoilState } from 'recoil';
@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import { createSheetModalOpen } from '../../../recoilstates/sheet/createSheetModalState';
 import { viewAllSheetsModalOpen } from '../../../recoilstates/sheet/viewAllSheetsModalOpenState';
 import { currentSheet } from '../../../recoilstates/sheet/currentSheet';
-import { nav } from 'framer-motion/client';
+import isOpenNotificationState from '../../../recoilstates/notification/isOpen';
 
 function Navbar() {
     const navigate = useNavigate();
@@ -18,6 +18,7 @@ function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [,setOpenCreateModal] = useRecoilState(createSheetModalOpen);
     const setOpenViewSheetModal = useSetRecoilState(viewAllSheetsModalOpen);
+    const [isOpenNotification,setIsOpenNotification] = useRecoilState(isOpenNotificationState);
 
     const handleNavigate = (path:string)=>{
         console.log("Navigating to ",path);
@@ -72,7 +73,10 @@ function Navbar() {
         </div>
         {/* right side */}
        <div className='flex items-center gap-10'>
-            <div className='flex gap-5'>
+            <div className='flex gap-5 items-center'>
+                        <div onClick={()=>setIsOpenNotification((prev)=>!prev)} className='hover:cursor-pointer'>
+                            <BellRing size={20} className={"hover:scale-110 transition-transform"} />
+                        </div>
                         <div  
                             className={` ${selectedField==="Editor"?"bg-slate-950":"bg-slate"} hover:cursor-pointer hover:bg-slate-950 px-3 py-1 bg-blue-950 rounded-lg `} 
                             onClick={()=>{
@@ -93,7 +97,6 @@ function Navbar() {
                                 </span>
                                 <ChevronDown className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
                             </div>
-
                             {/* Dropdown */}
                                 {isOpen && (
                                     <div className="absolute mt-2  bg-blue-950 border min-w-48 border-gray-600 rounded-lg shadow-lg z-50 overflow-hidden">

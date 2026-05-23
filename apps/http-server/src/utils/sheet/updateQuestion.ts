@@ -24,7 +24,12 @@ export const updateQuestion = async(req:any,res:Response) =>{
         }
 
         const updatedFields: FieldsToBeUpdated = bodyData.fieldToBeUpdated;
-
+        console.log("Updating question with the following details: ",{
+            questionId: bodyData.questionId,
+            sheetId: bodyData.sheetId,
+            folderId: bodyData.folderId,
+            updatedFields
+        });
         const updateQuestionFromDb = await Question.findOneAndUpdate(
             {
                 _id: bodyData.questionId,
@@ -32,7 +37,7 @@ export const updateQuestion = async(req:any,res:Response) =>{
                 folderId: bodyData.folderId
             },
             {
-                ...updatedFields // will only update the fields that are present in the request body, if a field is not present it will not be updated in the database
+                $set : updatedFields // will only update the fields that are present in the request body, if a field is not present it will not be updated in the database
             },
             { new: true } // return the updated document
         );
@@ -44,10 +49,13 @@ export const updateQuestion = async(req:any,res:Response) =>{
             }
             return res.status(404).json(response);
         }
-
-        const response:basicResponseType = {
+        interface updateQuestionResponseType extends basicResponseType{
+            Question: typeof updateQuestionFromDb
+        }
+        const response:updateQuestionResponseType ={
             success: true,
-            message: "Question updated successfully"
+            message: "Question updated successfully",
+            Question: updateQuestionFromDb
         }
         return res.status(200).json(response);
 

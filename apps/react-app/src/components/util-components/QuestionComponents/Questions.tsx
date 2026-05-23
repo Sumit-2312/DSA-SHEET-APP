@@ -3,7 +3,7 @@ import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 
 import type { Folder } from '@repo/types/apiResponse/getSheetDataResponseType';
 import QuestionItem from "./QuestionItem";
-import { solvedQuestionsCountState } from "../../../recoilstates/sheet/sheetSelectors";
+import { solvedQuestionsCountState, totalQuestionsState } from "../../../recoilstates/sheet/sheetSelectors";
 import { questionsState } from "../../../recoilstates/sheet/currentSheetContent";
 
 
@@ -11,8 +11,9 @@ import { questionsState } from "../../../recoilstates/sheet/currentSheetContent"
 function Questions() {
   const currFolder = useRecoilValue<Folder|null>(currentFolder);
   const solved = useRecoilValue(solvedQuestionsCountState); // selector for current folder solved question count which return functioin
-  const total = currFolder?.questionIds?.length || 0;
+  const total = useRecoilValue(totalQuestionsState);
   const questionMap = useRecoilValue(questionsState);
+
 
   return (
     <div className="h-full flex flex-col bg-[#0f172a] text-white">
@@ -34,9 +35,14 @@ function Questions() {
       {/* Questions List */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 no-scrollbar">
         {currFolder?.questionIds?.length ? (
-          currFolder.questionIds.map((quesId) => (
-            <QuestionItem ques={questionMap[quesId]} />
-          ))
+          currFolder.questionIds.map((quesId) => {
+            if( !questionMap[quesId] ){
+              return null;
+            }
+            return (
+              <QuestionItem key={quesId} ques={questionMap[quesId]} />
+            );
+          })
         ) : (
           <div className="text-gray-400 text-sm text-center mt-10">
             No questions found in this folder.

@@ -7,7 +7,7 @@ import { addFolderModalState } from "../../../recoilstates/folders/addFolderModa
 import { addQuestionModalState } from "../../../recoilstates/question/questionModalStates";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { foldersState, sheetMetaState } from "../../../recoilstates/sheet/currentSheetContent";
+import { foldersState, questionsState, sheetMetaState } from "../../../recoilstates/sheet/currentSheetContent";
 import { renameFolderState } from "../../../recoilstates/sheet/renameFolder";
 
 type Props = {
@@ -26,7 +26,8 @@ function FolderItem({ folder, onSelect }: Props) {
   const [,setAddFolderModalOpenState] = useRecoilState(addFolderModalState);
   const setAddQuestionModalOpenState = useSetRecoilState(addQuestionModalState);
   const [,setRenameFolderModalState] = useRecoilState(renameFolderState);
-  const foldersMap = useRecoilValue(foldersState);
+  const [foldersMap,setFoldersMap] = useRecoilState(foldersState);
+  const [,setQuestionMap] = useRecoilState(questionsState);
   const sheetDetails = useRecoilValue(sheetMetaState);
 
   const handleClick = () => {
@@ -34,20 +35,58 @@ function FolderItem({ folder, onSelect }: Props) {
     onSelect(folder);
   };
 
-    const removeFolderFromTree = (
-      folders: Folder[],
-      folderId: string
-    ): Folder[] => {
-      return folders
-        //  remove the folder
-        .filter((folder) => folder.id !== folderId)
+  const removeFolder=(folderId:string)=>{
+    if(!folderId) return;
 
-        // recursively update children
-        .map((folder) => ({
-          ...folder,
-          childFolders: removeFolderFromTree(folder.childFolders, folderId),
-        }));
-    };
+    const foldersToDelete:string[]=[];
+    const questionsToDelete:string[]=[];
+
+    const collect=(id:string)=>{
+        const folder = foldersMap[id];
+
+        if(!folder) return;
+
+        foldersToDelete.push(id);
+
+        questionsToDelete.push(...folder.questionIds);
+
+        folder.childFolderIds.forEach(collect);
+    }
+
+    collect(folderId);
+
+    setQuestionMap(prev=>{
+        const newMap={...prev};
+
+        questionsToDelete.forEach(id=>{
+          delete newMap[id];
+        });
+
+        return newMap;
+    });
+
+    setFoldersMap(prev=>{
+        const newMap={...prev};
+
+        const parentId=prev[folderId]?.parentFolderId;
+
+        if(parentId){
+          newMap[parentId]={
+              ...newMap[parentId],
+              childFolderIds:
+                newMap[parentId].childFolderIds.filter(
+                    id=>id!==folderId
+                )
+          }
+        }
+
+        foldersToDelete.forEach(id=>{
+          delete newMap[id];
+        });
+
+        return newMap;
+    });
+  }
 
   const handleDeleteFolder = async () => {
       const confirmDelete = window.confirm(
@@ -59,12 +98,12 @@ function FolderItem({ folder, onSelect }: Props) {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/sheet/removeFolder`,
-            {
+        const res = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/sheet/folder`,
+          {
+            data: {
               folderId: folder.id,
             },
-          {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
@@ -80,22 +119,10 @@ function FolderItem({ folder, onSelect }: Props) {
         }
 
         toast.success("Folder deleted successfully");
-        if (!sheetData) return;
 
-        const updatedFolders = removeFolderFromTree(
-          sheetData.Folders,
-          folder.id
-        );
+        // remove folder from folder map with all child folders and their question recursively
+        removeFolder(folder?.id);
 
-        setSheetData((prev) => {
-          if (!prev) return prev;
-
-          return {
-            ...prev,
-            totalQuestions: prev.totalQuestions - data.deletedCount,
-            Folders: updatedFolders,
-          };
-        });
         setCurrFolder(null);
       } catch (error) {
         console.error(error);
@@ -193,13 +220,16 @@ function FolderItem({ folder, onSelect }: Props) {
       {/* Children (Recursive) */}
       {isOpen && folder.childFolderIds && folder.childFolderIds.length > 0 && (
         <div className="ml-4 border-l border-gray-700 pl-2">
-          {folder.childFolderIds.map((childId) => (
+          {folder.childFolderIds.map((childId) => {
+            if( !foldersMap[childId] ) return null;
+           return (
             <FolderItem
               key={childId}  
               folder={foldersMap[childId]}
               onSelect={onSelect}
             />
-          ))}
+          )}
+          )}
         </div>
       )}
     </div>

@@ -1,8 +1,7 @@
-
 import type { Question } from "@repo/types/apiResponse/getSheetDataResponseType";
-import { BookOpenText, Check } from "lucide-react";
+import { Check, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   activeQuestionState,
   addResourceModalState,
@@ -12,149 +11,190 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import type { basicResponseType } from "@repo/types/apiResponse/basicResponseType";
-import { div } from "framer-motion/client";
+import { foldersState, questionsState } from "../../../recoilstates/sheet/currentSheetContent";
 
-const getDifficultyColor = (difficulty: string) => {
-  if (difficulty === "easy") return "text-green-400 bg-green-400/10";
-  if (difficulty === "medium") return "text-yellow-400 bg-yellow-400/10";
-  if (difficulty === "hard") return "text-red-400 bg-red-400/10";
-  return "text-gray-400 bg-gray-400/10";
+const getDifficultyStyle = (difficulty: string) => {
+  if (difficulty === "easy")   return "text-teal-700   bg-teal-50   dark:text-teal-300   dark:bg-teal-900/20";
+  if (difficulty === "medium") return "text-amber-700  bg-amber-50  dark:text-amber-300  dark:bg-amber-900/20";
+  if (difficulty === "hard")   return "text-red-700    bg-red-50    dark:text-red-300    dark:bg-red-900/20";
+  return "text-gray-500 bg-gray-100 dark:bg-gray-800";
 };
 
 function QuestionItem({ ques }: { ques: Question }) {
-  const [solved, setSolved] = useState(ques.done);
+  const [questionMap, setQuestionMap] = useRecoilState(questionsState);
   const openResourceModal = useSetRecoilState(addResourceModalState);
-  const openNotesModal = useSetRecoilState(notesModalState);
+  const openNotesModal    = useSetRecoilState(notesModalState);
   const setActiveQuestion = useSetRecoilState(activeQuestionState);
-  
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [folderMap, setFolderMap] = useRecoilState(foldersState);
 
-  const handleMarkSolved = async()=>{
-    try{
-      const updatedSolvedState = !solved;
-      const response = await axios.patch(`${import.meta.env.VITE_APP_API_URL}/sheet/question`,{
-        questionId: ques.id,
-        done: updatedSolvedState,
-        folderId: ques.folderId,
-        sheetId: ques.sheetId
-      },{
-        headers:{
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
-      const data:basicResponseType = response.data;
-      if( !data.success ){
-        throw new Error(data.error || "Failed to update the question's solved state");
-      }
-      setSolved(updatedSolvedState);
-      // we also need to update the solved state in the current sheet data recoil state so that the solved count and solved questions list gets updated in real time without refetching the sheet data from the backend. We can achieve this by creating a new recoil state for the current question's solved state and updating it here, and then using that recoil state in the Sheet component to calculate the solved count and solved questions list.
-      toast.success("Done");
-    }
-    catch(err){
-      console.log("Error while updating the question's solved state: ",err);
-      toast.error("Failed to update the question's solved state. Please try again.");
+  useEffect(()=>{
+    console.log(`QuestionItem : { ques: ${ques.title} , questionId: ${ques.id} } rendered `);
+  });
+
+  const isDone = questionMap[ques?.id]?.done;
+
+  const handleMarkSolved = async () => {
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/sheet/question`,
+        {
+          questionId: ques.id,
+          folderId:   ques.folderId,
+          sheetId:    ques.sheetId,
+          fieldToBeUpdated: { done: !isDone },
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      const data: basicResponseType = response.data;
+      if (!data.success) throw new Error(data.error || "Failed to update");
+
+      setQuestionMap((prev) => ({
+        ...prev,
+        [ques.id]: { ...prev[ques.id], done: !prev[ques.id]?.done },
+      }));
+      toast.success("Done", { autoClose: 1000 });
+      setIsDisabled(true);
+      setTimeout(() => setIsDisabled(false), 3000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update. Please try again.");
     }
   };
 
-  useEffect(()=>{
-    console.log("Resource link: ", ques.resourceLink);
+  const handleDelete = async()=>{
+    try{
+      const response = await axios.delete<basicResponseType>(
+        `${import.meta.env.VITE_BACKEND_URL}/sheet/question`,
+        {
+          data: {
+            questionId: ques.id,
+            folderId:   ques.folderId,
+            sheetId:    ques.sheetId,
+          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }
+      );
+      const data: basicResponseType = response.data;
+      if (!data.success) throw new Error(data.error || "Failed to delete");
+      toast.success("Question deleted", { autoClose: 1000 });
+      // remove this questoin from the folder also 
+      setFolderMap((prev)=>{
+        return {
+          ...prev,
+          [ques.folderId]:{
+            ...prev[ques.folderId],
+            questionIds: prev[ques.folderId].questionIds.filter(id=>id!==ques.id)
+          }
+        }
+      });
+      // remove this question from question map
+      setQuestionMap((prev)=>{
+        const newMap = {...prev};
+        delete newMap[ques.id];
+        return newMap;
+      })
+    }catch(err:unknown){
+      if( axios.isAxiosError(err) ){
+        console.error("Axios error:", err.response?.data?.error || err.message);
+        toast.error(err.response?.data?.error || "Failed to delete. Please try again.");
+      }else{
+        console.error(err);
+        toast.error("Failed to delete. Please try again.");
+      }
+    }
+  }
+
+  useEffect(() => {
+    console.log("Resource link:", ques.resourceLink);
   }, [ques.resourceLink]);
 
   return (
-    <div className="select-none group flex flex-col bg-[#1e293b] rounded-lg px-4 py-3 gap-2">
-      
-      {/* TOP ROW */}
-      <div className="flex items-center justify-between">
-        
-        {/* LEFT */}
-        <div className="flex items-center gap-3">
-          
-          {/* Checkbox */}
-          <div
-            onClick={() => setSolved((prev) => !prev)}
-            className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer ${
-              solved ? "bg-green-800" : "bg-gray-500"
-            }`}
-          >
-            {solved && <Check className="h-4 text-white" />}
-          </div>
+    <div className="group bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/[0.06] rounded-xl px-5 py-3.5 transition-colors hover:border-gray-200 dark:hover:border-white/10 select-none">
 
-          {/* Title + Platform */}
-          <div className="flex flex-col">
-            <span className="text-sm font-medium group-hover:text-blue-400 transition">
-              {ques.title}
-            </span>
-            <span className="text-xs text-gray-400">
-              {ques.platform}
-            </span>
-          </div>
+      {/* TOP ROW */}
+      <div className="flex items-center gap-3">
+
+        {/* Checkbox */}
+        <button
+          disabled={isDisabled}
+          onClick={handleMarkSolved}
+          className={`
+            w-[18px] h-[18px] rounded-md flex items-center justify-center flex-shrink-0 transition-all
+            ${isDone
+              ? "bg-teal-600 border-teal-600"
+              : "border border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40"
+            }
+            ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
+          `}
+        >
+          {isDone && <Check size={11} strokeWidth={3} className="text-white" />}
+        </button>
+
+        {/* Title + Platform */}
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-medium truncate transition-colors text-gray-800 dark:text-gray-100 group-hover:text-blue-500 dark:group-hover:text-blue-400`}>
+            {ques.title}
+          </p>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{ques.platform}</p>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex  w-1/4 justify-between px-5 items-center gap-3">
-          
-          {/* resource redirect */}
-          {ques.resourceLink ? (
-            <div className="w-1/3">
-              <Link to={ques.resourceLink} target="_blank" >
-              <div className="hover:cursor-pointer  flex items-center gap-1">
-                <BookOpenText size={20} className="mt-1" />
-                <p>Read</p>
-              </div>
+        {/* Right cluster */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+
+          {/* Read link */}
+          {ques.resourceLink && (
+            <Link
+              to={ques.resourceLink}
+              target="_blank"
+              className="flex items-center gap-1 text-[12px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <BookOpen size={14} />
+              <span>Read</span>
             </Link>
-            </div>
-          ):(
-            <div className="w-1/3 ">
-              </div>
           )}
 
-          {/* Difficulty */}
-          <div className="w-1/3 ">
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${getDifficultyColor(
-                ques.difficulty
-              )}`}
-            >
+          {/* Difficulty badge */}
+          <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${getDifficultyStyle(ques.difficulty)}`}>
             {ques.difficulty}
           </span>
 
-          </div>
-          {/* Solve Link */}
-          <a
-            href={ques.link}
+          {/* Solve button */}
+          <Link
+            to={ques.link}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="text-blue-400 text-xs opacity-0 group-hover:opacity-100 transition"
+            className="text-[12px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 px-3.5 py-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all"
           >
-            Solve 
-          </a>
-
+            Solve ↗
+          </Link>
         </div>
       </div>
 
-      {/* BOTTOM ROW (Actions) */}
-      <div className="flex gap-4 text-xs pl-8">
-        
-        <button
-          onClick={() => {
-            setActiveQuestion(ques);
-            openResourceModal(true);
-          }}
-          className="text-blue-400 hover:underline"
-        >
-          {ques.resourceLink ? "Edit Resource" : "Add Resource"}
-        </button>
+      {/* DIVIDER */}
+      <div className="h-px bg-gray-100 dark:bg-white/[0.05] my-2.5 ml-[30px]" />
 
-        <button
-          onClick={() => {
-            setActiveQuestion(ques);
-            openNotesModal(true);
-          }}
-          className="text-yellow-400 hover:underline"
-        >
-          Notes
-        </button>
+      {/* BOTTOM ROW */}
+      <div className="flex items-center justify-between pl-[30px]">
+        <div className="flex gap-4">
+          <button
+            onClick={() => { setActiveQuestion(questionMap[ques.id]); openResourceModal(true); }}
+            className="text-[12px] text-blue-500 hover:underline"
+          >
+            {ques.resourceLink ? "Edit Resource" : "Add Resource"}
+          </button>
+          <button
+            onClick={() => { setActiveQuestion(questionMap[ques.id]); openNotesModal(true); }}
+            className="text-[12px] text-amber-600 dark:text-amber-500 hover:underline"
+          >
+            Notes
+          </button>
+        </div>
 
+        <button onClick={handleDelete} className="text-[12px] text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-3 py-0.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+          Delete
+        </button>
       </div>
     </div>
   );

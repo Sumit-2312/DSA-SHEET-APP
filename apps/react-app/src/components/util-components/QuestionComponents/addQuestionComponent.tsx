@@ -92,7 +92,7 @@ function AddQuestionModal() {
       };
 
       const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/sheet/addQuestion`,
+        `${import.meta.env.VITE_BACKEND_URL}/sheet/question`,
         body,
         {
           headers: {

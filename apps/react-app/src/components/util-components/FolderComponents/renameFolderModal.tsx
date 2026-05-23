@@ -23,7 +23,7 @@ function RenameFolderModal() {
 
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/sheet/updateFolder`,{
+            const response = await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/sheet/folder`,{
                 folderId: renameFoderState.folderId,
                 newName
             },{
