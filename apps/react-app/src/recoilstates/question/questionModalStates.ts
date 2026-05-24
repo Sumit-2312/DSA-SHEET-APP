@@ -22,3 +22,8 @@ export const addQuestionModalState = atom<boolean>({
   key: "addQuestionModalState",
   default: false,
 });
+
+export const addOwnQuestionModalState = atom<boolean>({
+  key: "AddOwnQuestionModalState",
+  default: false
+})

@@ -60,37 +60,36 @@ export async function JudgeRequest(
 
   try {
 
-
+    console.log("Submitting the request");
     const submitresponse = await axios.post(
       `${JUDGE0_URL}/submissions?base64_encoded=true&wait=false`,
       body,
       {
         headers: {
           "Content-Type": "application/json",
-        },
-        timeout: 20000, 
+        }
       }
     );
+    console.log("Submitted the request");
+    console.log(`Token generated is: ${submitresponse.data.token}`)
 
     const token = submitresponse.data.token;
 
     let result: Judge0ResponseType | undefined;
-    const MAX_RETRIES = 15;
+    const MAX_RETRIES = 25;
     let attempts = 0;
 
     while(attempts < MAX_RETRIES){
 
         attempts++;
-
+        console.log(`Attempt: ${attempts}`)
         await new Promise(
             r => setTimeout(r,1000)
         );
 
         const response =
           await axios.get(
-            `${JUDGE0_URL}/submissions/${token}?base64_encoded=true`,{
-              timeout:10000
-            }
+            `${JUDGE0_URL}/submissions/${token}?base64_encoded=true`
           );
 
         result = response.data;
@@ -99,6 +98,7 @@ export async function JudgeRequest(
           result?.status.id !== 1 &&
           result?.status.id !== 2
         ){
+          console.log("Break statement ran inside loop")
             break;
         }
     }
@@ -108,6 +108,7 @@ export async function JudgeRequest(
       result.status.id===1 ||
       result.status.id===2
     ){
+      console.log("Error thrown from line 114")
       throw new Error(
           "Judge execution timeout"
       );

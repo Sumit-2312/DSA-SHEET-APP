@@ -6,7 +6,6 @@ export const userState = atom<{
   sheets: {
     id: string;
     name: string;
-    totalQuestions: number;
   }[];
 } | null>({
   key: "userState",

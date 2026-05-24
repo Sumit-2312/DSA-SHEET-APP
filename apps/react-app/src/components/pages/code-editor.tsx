@@ -19,7 +19,6 @@ import { modalOpen } from "../../recoilstates/snippets/createSnippetmodalOpen.js
 import { viewAllSnippetsModalOpen } from "../../recoilstates/snippets/viewAllSnippetsModalOpen.js";
 import { useNavigate } from "react-router-dom";
 import { editSnippetModalOpen } from "../../recoilstates/snippets/editSnippetModal.js";
-import { selectedSnippetId } from "../../recoilstates/snippets/selectedSnippetIdstate.js";
 import SnippetDropdown from "../util-components/SnippetComponents/SnippetDropdown.js";
 import CreateSnippetModal from "../util-components/SnippetComponents/AddsnippetModal.js";
 import ViewAllSnippetsModal from "../util-components/SnippetComponents/ViewAllSnippetsModal.js";
@@ -59,7 +58,6 @@ function CodeEditor() {
   const [openModal,] = useRecoilState(modalOpen);
   const viewAllSnippetModal = useRecoilValue(viewAllSnippetsModalOpen);
   const Navigage = useNavigate();
-  const currentSnippetId = useRecoilValue(selectedSnippetId);
   const [IsOpenEditSnippetModal,] = useRecoilState(editSnippetModalOpen);
 
 
@@ -204,7 +202,7 @@ function CodeEditor() {
   const editorHeight = `calc(100vh - ${HEADER_H}px - ${termHeight}px - 6px)`; // 6px = drag handle
 
   return (
-    <div ref={shellRef} className="relative flex flex-col h-screen w-screen bg-[#0f172a] text-white overflow-hidden">
+    <div ref={shellRef} className="relative flex flex-col h-screen w-full bg-[#0f172a] text-white overflow-hidden">
 
       {/* Header */}
       <div className="h-10 flex-shrink-0 flex items-center justify-between px-4 bg-[#1e293b] border-b border-slate-700">

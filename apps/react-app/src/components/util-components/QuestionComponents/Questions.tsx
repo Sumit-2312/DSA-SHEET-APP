@@ -1,10 +1,11 @@
-import { useRecoilValue } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 
 import type { Folder } from '@repo/types/apiResponse/getSheetDataResponseType';
 import QuestionItem from "./QuestionItem";
 import { solvedQuestionsCountState, totalQuestionsState } from "../../../recoilstates/sheet/sheetSelectors";
 import { questionsState } from "../../../recoilstates/sheet/currentSheetContent";
+import { addOwnQuestionModalState } from "../../../recoilstates/question/questionModalStates";
 
 
 
@@ -13,7 +14,7 @@ function Questions() {
   const solved = useRecoilValue(solvedQuestionsCountState); // selector for current folder solved question count which return functioin
   const total = useRecoilValue(totalQuestionsState);
   const questionMap = useRecoilValue(questionsState);
-
+  const setCreateOwnQuestionModalState = useSetRecoilState(addOwnQuestionModalState);
 
   return (
     <div className="h-full flex flex-col bg-[#0f172a] text-white">
@@ -31,9 +32,14 @@ function Questions() {
           </p>
         </div>
 
-    </div>
+        {/* Right */}
+        <div onClick={()=>setCreateOwnQuestionModalState(true)} className=" h-full border border-gray-500 text-white font-bold rounded-md flex items-center justify-center px-5 hover:cursor-pointer hover:border-blue-600  hover:bg-blue-400/5 hover:scale-105 ">
+          Create Own Question 
+        </div>
+
+      </div>
       {/* Questions List */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 no-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 py-3 pb-10 space-y-2 no-scrollbar hide-scrollbar ">
         {currFolder?.questionIds?.length ? (
           currFolder.questionIds.map((quesId) => {
             if( !questionMap[quesId] ){

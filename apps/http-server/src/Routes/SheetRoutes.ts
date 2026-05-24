@@ -17,7 +17,7 @@ const SheetRouter = express.Router();
 
 SheetRouter.get('/SheetData', sheetData); // done
 SheetRouter.get('/SheetList', sheetList); 
-SheetRouter.get('/userDetails', userDetails);
+SheetRouter.get('/user', userDetails);
 SheetRouter.patch('/question', updateQuestion); // done
 SheetRouter.post('/question', addQuestion); // done
 SheetRouter.delete('/question', removeQuestion);    

@@ -4,12 +4,13 @@ import CreateSheetModal from '../util-components/sheetComponents/createSheetModa
 import ViewAllSheetsModal from '../util-components/sheetComponents/viewAllSheetsModal'
 import EditSheetNameModal from '../util-components/sheetComponents/editSheetNameModal'
 import {NotificationPanel} from "../pages/Notification"
+import AddOwnQuestionModal from "../util-components/QuestionComponents/AddOwnQuestionComponent"
 
 function NavbarLayout() {
   return (
-    <div className='overflow-hidden min-h-screen bg-black flex flex-col items-center text-white'>
+    <div className='overflow-hidden h-screen  bg-black flex flex-col items-center text-white'>
         <Navbar/>
-        <div className='' >
+        <div className='w-screen' >
             <Outlet/>
         </div>
 
@@ -17,6 +18,7 @@ function NavbarLayout() {
         <ViewAllSheetsModal/>
         <EditSheetNameModal/>
         <NotificationPanel/>
+        <AddOwnQuestionModal/>
     </div>
   )
 }

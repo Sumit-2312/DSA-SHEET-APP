@@ -1,7 +1,7 @@
 import { BellRing, ChevronDown, User } from 'lucide-react';
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { allSheetsState } from '../../../recoilstates/sheet/allSheetsState';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import { createSheetModalOpen } from '../../../recoilstates/sheet/createSheetMod
 import { viewAllSheetsModalOpen } from '../../../recoilstates/sheet/viewAllSheetsModalOpenState';
 import { currentSheet } from '../../../recoilstates/sheet/currentSheet';
 import isOpenNotificationState from '../../../recoilstates/notification/isOpen';
+import { userState } from '../../../recoilstates/user/userState';
 
 function Navbar() {
     const navigate = useNavigate();
@@ -18,7 +19,8 @@ function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [,setOpenCreateModal] = useRecoilState(createSheetModalOpen);
     const setOpenViewSheetModal = useSetRecoilState(viewAllSheetsModalOpen);
-    const [isOpenNotification,setIsOpenNotification] = useRecoilState(isOpenNotificationState);
+    const [,setIsOpenNotification] = useRecoilState(isOpenNotificationState);
+    const userDetails = useRecoilValue(userState);
 
     const handleNavigate = (path:string)=>{
         console.log("Navigating to ",path);
@@ -149,8 +151,16 @@ function Navbar() {
                         </div>
   
             </div>
-            <div  className='h-10 w-10 hover:cursor-pointer rounded-full border border-gray-500 font-bold' onClick={()=>handleNavigate("profile")}  >
-                <User className="h-full w-full opacity-60 " />
+            <div  className='h-10 w-10 hover:cursor-pointer rounded-full border border-gray-500  overflow-hidden font-bold' onClick={()=>handleNavigate("profile")}  >
+                {
+                    (userDetails && userDetails.name )?(
+                        <div className='h-full w-full flex items-center justify-center font-extrabold text-2xl text-blue-800 bg-gray-100 '>
+                            {userDetails.name[0].toUpperCase()}
+                        </div>
+                    ):(
+                        <User className="h-full w-full opacity-60 " />
+                    )
+                }
             </div>
        </div>
     </div>

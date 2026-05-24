@@ -168,6 +168,10 @@ function VerifyPage() {
 
     }
 
+    const Skiphandler =()=>{
+        navigate("/dashboard");
+    }
+
     useEffect(() => {
         if (TimerValue === 0) return;
 
@@ -200,10 +204,15 @@ function VerifyPage() {
                 />            
             ))}
         </div>
-        {
-            (countOfMailSent==0) && <RequestButton variant='light' text='Send Mail' onClick={MailHandler} />
-        }
+
+            <div className='flex w-full gap-3'>
+                {
+                    (countOfMailSent==0) && <RequestButton variant='light' text='Send Mail' onClick={MailHandler} />
+                }
+                <RequestButton variant='dark' text="Skip" onClick={Skiphandler} />
+            </div>
         <RequestButton text="Verify" variant="dark" onClick={(e)=>verifyHandler(e)} />
+
         {
             (countOfMailSent > 0 )&&
             <div className=' w-full items-center flex gap-1'>
