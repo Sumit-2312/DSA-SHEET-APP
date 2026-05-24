@@ -26,13 +26,12 @@ function QuestionItem({ ques }: { ques: Question }) {
   const openNotesModal    = useSetRecoilState(notesModalState);
   const setActiveQuestion = useSetRecoilState(activeQuestionState);
   const [isDisabled, setIsDisabled] = useState(false);
-  const [folderMap, setFolderMap] = useRecoilState(foldersState);
+  const [, setFolderMap] = useRecoilState(foldersState);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(ques.title); 
 
-
   useEffect(()=>{
-    console.log(`QuestionItem : { ques: ${ques.title} , questionId: ${ques.id} } rendered `);
+    console.log(`QuestionItem : { ques: ${ques.title} , questionId: ${ques.id} } rendered  , type: ${ques.type}`);
   });
 
   const isDone = questionMap[ques?.id]?.done;
@@ -162,7 +161,7 @@ const handleNameChange = async () => {
   }
 };
 
-  useEffect(() => {
+  useEffect(() => { 
     console.log("Resource link:", ques.resourceLink);
   }, [ques.resourceLink]);
 
@@ -254,15 +253,27 @@ const handleNameChange = async () => {
             </Link>
           )}
           {/* Solve button */}
-          <Link
-            to={ques.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-[12px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 px-3.5 py-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all"
-          >
-            Solve ↗
-          </Link>
+        {
+          ques.type === "Custom" ? (
+              <Link
+                to={`/customQuestion/${ques.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-[12px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 px-3.5 py-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all"
+              >
+                Solve ↗
+            </Link>
+          ):(
+              <Link
+                to={ques.link }
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-[12px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 px-3.5 py-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all"
+              >
+                Solve ↗
+              </Link>
+          )
+        }
         </div>
       </div>
 

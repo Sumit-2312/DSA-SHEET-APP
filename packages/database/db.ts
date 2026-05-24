@@ -96,16 +96,21 @@ const FolderSchema = new Schema({
 
 
 
-
 // QUESTION SCHEMA 
 const QuestionSchema = new Schema({
     title: {
       type: String,
       required: true
     },
+    type:{
+      type: String,
+      enum: ["Custom","Normal"]
+    },
     link: {
       type: String,
-      required: true
+      required: (function(this:any){
+        return this.type === "Normal";
+      })
     },
     difficulty: {
         type: String,
@@ -140,12 +145,31 @@ const QuestionSchema = new Schema({
     resourceLink:{
       type: String,
       default: ""
+    },
+    problemStatement:{
+      type: String,
+      required: (function(this: any){
+        return this.type === "Custom";
+      })
+    },
+    inputs:{
+      type:[
+        {
+          input: String,
+          output: String
+        }
+      ],
+      required: (function(this:any){
+        return this.type === "Custom";
+      }),
+      default: []
     }
 }, { timestamps: true });
 
 
-// Snippets
 
+
+// Snippets
 const SnippetSchema = new Schema({
   name: {
     type: String,

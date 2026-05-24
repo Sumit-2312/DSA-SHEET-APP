@@ -76,14 +76,22 @@ export const sheetData = async (req: any, res: Response) => {
       const normalizedQuestion: QuestionType = {
         id: qId,
         title: q.title,
-        link: q.link,
-        resourceLink: q.resourceLink,
+        link: q.link?? "",
+        resourceLink: q.resourceLink ?? "",
         notes: q.notes,
         platform: q.platform as string,
         difficulty: q.difficulty as "easy" | "medium" | "hard",
         folderId: q.folderId?.toString(),
         sheetId: q.sheetId?.toString(),
-        done: q.done
+        done: q.done,
+        type: q.type as "Custom" | "Normal" ?? "Normal",
+        ...(q.problemStatement && {
+          problemStatement: q.problemStatement
+        }),
+        inputs: q.inputs?.map(input => ({
+          input: input.input ?? "",
+          output: input.output ?? ""
+        })) || []
       };
 
       questionMap[qId] = normalizedQuestion;

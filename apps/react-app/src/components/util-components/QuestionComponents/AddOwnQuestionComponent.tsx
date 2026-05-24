@@ -1,52 +1,128 @@
 import { useState } from "react";
-import { X, FileText, Link2, StickyNote, BookOpen } from "lucide-react";
-import { useRecoilState } from "recoil";
+import { X, FileText,  BookOpen } from "lucide-react";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { addOwnQuestionModalState } from "../../../recoilstates/question/questionModalStates";
+import axios from "axios";
+import type {AddCustomQuestionRequestType}  from "@repo/types/apiRequests/addCustomQuestionRequestType";
+import type {AddOwnQuestionResponseType} from "@repo/types/apiResponse/addOwnQuestionResponseType";
+import { toast } from "react-toastify";
+import { foldersState, questionsState } from "../../../recoilstates/sheet/currentSheetContent";
+import { currentFolder } from "../../../recoilstates/folders/currentFolder";
+
 
 function AddOwnQuestionModal() {
   const [open, setOpen] = useRecoilState(addOwnQuestionModalState);
+  const setQuestionMap = useSetRecoilState(questionsState);
+  const setFolderMap = useSetRecoilState(foldersState);
+  const selectedFolder = useRecoilValue(currentFolder);
 
   const [form, setForm] = useState({
     title: "",
     statement: "",
-
     example1Input: "",
     example1Output: "",
-
     example2Input: "",
     example2Output: "",
-
-    resources: "",
-    notes: ""
+    difficulty: ""
   });
 
   const close = () => {
     setOpen(false);
-
     setForm({
       title: "",
       statement: "",
-
       example1Input: "",
       example1Output: "",
-
       example2Input: "",
-      example2Output: "",
-
-      resources: "",
-      notes: ""
+      example2Output: ""
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     console.log(form);
+    if( !form.title || !form.difficulty || !form.statement || !form.example1Input || !form.example1Output || !form.example2Input || !form.example2Output ){
+      alert("Please fill all the required fields");
+      return;
+    }
+    if( !selectedFolder ){
+      toast.error("No folder selected");
+      return;
+    }
+    try{
+      const body: AddCustomQuestionRequestType = {
+        title: form.title,
+        problemStatement: form.statement,
+        inputs:[
+          {
+            input: form.example1Input,
+            output: form.example1Output
+          },
+          {
+            input: form.example2Input,
+            output: form.example2Output
+          }
+        ],
+        folderId: selectedFolder.id,
+        sheetId: selectedFolder.sheetId,
+        platform: "DSA-Sheet-Manager",
+        difficulty: form.difficulty as "easy" | "medium" | "hard"
+      }
+
+      const response = await axios.post<AddOwnQuestionResponseType>(`${import.meta.env.VITE_BACKEND_URL}/sheet/customQuestion`,{
+        ...body
+      },{
+        headers:{
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      const data = response.data;
+      if( !data.success){
+        throw new Error(data.error || "Failed to add question");
+      }
+      // add the question to questionMap 
+      setQuestionMap((prev)=>{
+        return {
+          ...prev,
+          [data.Question.id]: data.Question
+        }
+      });
+
+      // add current question id to its parent folder 
+      setFolderMap((prev)=>{
+        const parentFolderId = data.Question.folderId;
+        const parentFolder = prev[parentFolderId];
+        if(!parentFolder){
+          return prev;
+        }
+        const updatedParentFolder = {
+          ...parentFolder,
+          questionIds: [...parentFolder.questionIds, data.Question.id]
+        }
+        return {
+          ...prev,
+          [parentFolderId]: updatedParentFolder
+        }
+      });
+
+      toast.success("Question added successfully");
+      close();
+    }catch(err:unknown){
+      if(err instanceof Error){
+        toast.error(err.message);
+      }else if( axios.isAxiosError(err) ){
+        toast.error(err.response?.data?.error || "Failed to add question");
+      }else{
+        toast.error("Failed to add question");
+      }
+    }
   };
 
   if (!open) return null;
@@ -87,7 +163,7 @@ function AddOwnQuestionModal() {
 
           <div>
             <label className="text-sm text-gray-300 mb-2 block">
-              Question Title
+              Question Title *
             </label>
 
             <input
@@ -99,6 +175,21 @@ function AddOwnQuestionModal() {
             />
           </div>
 
+          {/* Difficulty */}
+          <div>
+            <label className="text-sm text-gray-300">Difficulty *</label>
+            <select
+              name="difficulty"
+              value={form.difficulty}
+              onChange={handleChange}
+              className="w-full mt-1 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+            >
+              <option value="">Select Difficulty</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
 
           {/* Statement */}
 
@@ -106,7 +197,7 @@ function AddOwnQuestionModal() {
 
             <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
               <FileText size={15}/>
-              Problem Statement
+              Problem Statement *
             </label>
 
             <textarea
@@ -127,7 +218,7 @@ function AddOwnQuestionModal() {
             <div className="flex items-center gap-2">
               <BookOpen size={16} className="text-blue-400"/>
               <h3 className="text-gray-200 font-medium">
-                Examples
+                Examples 
               </h3>
             </div>
 
@@ -137,14 +228,14 @@ function AddOwnQuestionModal() {
             <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5">
 
               <p className="text-sm text-gray-400 mb-4">
-                Example 1
+                Example 1 
               </p>
 
               <div className="grid grid-cols-2 gap-4">
 
                 <div>
                   <label className="text-sm text-gray-300 mb-2 block">
-                    Input
+                    Input *
                   </label>
 
                   <textarea
@@ -158,7 +249,7 @@ function AddOwnQuestionModal() {
 
                 <div>
                   <label className="text-sm text-gray-300 mb-2 block">
-                    Output
+                    Output *
                   </label>
 
                   <textarea
@@ -187,7 +278,7 @@ function AddOwnQuestionModal() {
 
                 <div>
                   <label className="text-sm text-gray-300 mb-2 block">
-                    Input
+                    Input *
                   </label>
 
                   <textarea
@@ -201,7 +292,7 @@ function AddOwnQuestionModal() {
 
                 <div>
                   <label className="text-sm text-gray-300 mb-2 block">
-                    Output
+                    Output *
                   </label>
 
                   <textarea
@@ -216,46 +307,6 @@ function AddOwnQuestionModal() {
               </div>
 
             </div>
-
-          </div>
-
-
-          {/* Resources */}
-
-          <div>
-
-            <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-              <Link2 size={15}/>
-              Resources
-            </label>
-
-            <textarea
-              name="resources"
-              value={form.resources}
-              onChange={handleChange}
-              placeholder="Youtube links, article links..."
-              className="h-24 resize-none w-full rounded-2xl bg-white/[0.03] border border-white/10 px-4 py-3 text-white outline-none focus:border-blue-500 transition"
-            />
-
-          </div>
-
-
-          {/* Notes */}
-
-          <div>
-
-            <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-              <StickyNote size={15}/>
-              Personal Notes
-            </label>
-
-            <textarea
-              name="notes"
-              value={form.notes}
-              onChange={handleChange}
-              placeholder="Observations, tricks, approach..."
-              className="h-32 resize-none w-full rounded-2xl bg-white/[0.03] border border-white/10 px-4 py-3 text-white outline-none focus:border-blue-500 transition"
-            />
 
           </div>
 

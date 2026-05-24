@@ -6,11 +6,17 @@ export interface Question{
 	link: string,
 	resourceLink: string,
 	notes: string,
-	platform: string,
+	platform?: string,
 	difficulty: "easy"|"medium"|"hard",
 	folderId: string,
 	sheetId: string,
-	done: boolean
+	done: boolean,
+	type?: "Custom"|"Normal",
+	problemStatement?: string,
+	inputs?: {
+		input: string,
+		output: string
+	}[]
 }
 
 export interface Folder{

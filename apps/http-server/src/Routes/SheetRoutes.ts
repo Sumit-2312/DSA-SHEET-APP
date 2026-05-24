@@ -12,12 +12,17 @@ import { removeFolder } from '../utils/sheet/removeFolder.js';
 import { createSheet } from '../utils/sheet/createSheet.js';
 import { deleteSheet } from '../utils/sheet/deleteSheet.js';
 import { updateSheet } from '../utils/sheet/updateSheet.js';
+import { addCustomQuestion } from '../utils/sheet/addCustomQuestion.js';
+import { get } from 'mongoose';
+import getCustomQuestionById from '../utils/sheet/getCustomQuestionById.js';
+
 
 const SheetRouter = express.Router();
 
 SheetRouter.get('/SheetData', sheetData); // done
 SheetRouter.get('/SheetList', sheetList); 
 SheetRouter.get('/user', userDetails);
+SheetRouter.post('/customQuestion', addCustomQuestion); // done
 SheetRouter.patch('/question', updateQuestion); // done
 SheetRouter.post('/question', addQuestion); // done
 SheetRouter.delete('/question', removeQuestion);    
@@ -27,6 +32,6 @@ SheetRouter.delete('/folder', removeFolder);
 SheetRouter.post('/createSheet',createSheet); //
 SheetRouter.delete('/Sheet',deleteSheet);
 SheetRouter.patch('/Sheet',updateSheet); //
-
+SheetRouter.get('/customQuestion/:id', getCustomQuestionById);
 
 export default SheetRouter;
