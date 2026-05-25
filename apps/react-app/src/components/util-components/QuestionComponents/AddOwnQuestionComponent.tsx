@@ -15,6 +15,7 @@ function AddOwnQuestionModal() {
   const setQuestionMap = useSetRecoilState(questionsState);
   const setFolderMap = useSetRecoilState(foldersState);
   const selectedFolder = useRecoilValue(currentFolder);
+  const setCurrFolder = useSetRecoilState(currentFolder);
 
   const [form, setForm] = useState({
     title: "",
@@ -34,7 +35,8 @@ function AddOwnQuestionModal() {
       example1Input: "",
       example1Output: "",
       example2Input: "",
-      example2Output: ""
+      example2Output: "",
+      difficulty: ""
     });
   };
 
@@ -96,21 +98,30 @@ function AddOwnQuestionModal() {
       });
 
       // add current question id to its parent folder 
-      setFolderMap((prev)=>{
-        const parentFolderId = data.Question.folderId;
-        const parentFolder = prev[parentFolderId];
-        if(!parentFolder){
-          return prev;
-        }
-        const updatedParentFolder = {
-          ...parentFolder,
-          questionIds: [...parentFolder.questionIds, data.Question.id]
-        }
+      setFolderMap(prev => {
+        const folder = prev[data.Question.folderId];
+        if(!folder) return prev;
+        const ids = new Set([
+          ...folder.questionIds,
+          data.Question.id
+        ]);
         return {
           ...prev,
-          [parentFolderId]: updatedParentFolder
-        }
+          [data.Question.folderId]:{
+            ...folder,
+            questionIds:[...ids]
+          }
+        };
       });
+
+      // update current folder state
+        setCurrFolder((prev)=>{ 
+          if(!prev) return prev;
+          return {
+            ...prev,
+            questionIds: [...(prev.questionIds || []), data.Question.id]
+          }
+        })
 
       toast.success("Question added successfully");
       close();

@@ -166,10 +166,10 @@ const handleNameChange = async () => {
   }, [ques.resourceLink]);
 
   return (
-    <div className="group bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/[0.06] rounded-xl px-5 py-3.5 transition-colors hover:border-gray-200 dark:hover:border-white/10 select-none">
+    <div className="group w-full bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/[0.06] rounded-xl px-5 py-3.5 transition-colors hover:border-gray-200 dark:hover:border-white/10 select-none">
 
       {/* TOP ROW */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 justify-between flex-wrap ">
 
         {/* Checkbox */}
         <button
@@ -281,14 +281,15 @@ const handleNameChange = async () => {
       <div className="h-px bg-gray-100 dark:bg-white/[0.05] my-2.5 ml-[30px]" />
 
       {/* BOTTOM ROW */}
-      <div className="flex items-center justify-between pl-[30px]">
+      <div className="flex items-center justify-start gap-5 sm:justify-between pl-[30px]">
         <div className="flex gap-4">
           <button
             onClick={() => { setActiveQuestion(questionMap[ques.id]); openResourceModal(true); }}
-            className="text-[12px] text-blue-500 hover:underline"
+            className="text-[12px] text-blue-500 hover:underline truncate "
           >
             {ques.resourceLink ? "Edit Resource" : "Add Resource"}
           </button>
+          
           <button
             onClick={() => { setActiveQuestion(questionMap[ques.id]); openNotesModal(true); }}
             className="text-[12px] text-amber-600 dark:text-amber-500 hover:underline"

@@ -15,10 +15,6 @@ type Props = {
   onSelect: (folder: FolderType) => void;
 };
 
-
-
-
-
 function FolderItem({ folder, onSelect }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [curr_folder,setCurrFolder] = useRecoilState(currentFolder);
@@ -150,7 +146,7 @@ function FolderItem({ folder, onSelect }: Props) {
         )}
 
         {/* Folder Name */}
-        <span className="text-sm select-none">{folder.name}</span>
+        <span className="text-sm w-full select-none truncate ">{folder.name}</span>
 
         {/* options in each folder itsm */}
         <div className="absolute right-4   top-1/2 -translate-y-1/2 group-hover:block hidden  ">

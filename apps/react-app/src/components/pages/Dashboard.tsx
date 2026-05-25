@@ -276,13 +276,12 @@ function Dashboard() {
   return (
     <div
       style={{
-        minHeight: "100vh",
         background: "#060810",
         color: "#fff",
         fontFamily:
           "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
-        overflowX: "hidden",
       }}
+      className="h-fit"
     >
       {/* Subtle radial glow behind hero */}
       <div
