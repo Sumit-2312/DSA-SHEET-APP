@@ -4,14 +4,12 @@ import { currentFolder } from "../../../recoilstates/folders/currentFolder";
 import type { Folder } from '@repo/types/apiResponse/getSheetDataResponseType';
 import QuestionItem from "./QuestionItem";
 import {  folderTotalQuestionsSelector, folderSolvedQuestionsSelector } from "../../../recoilstates/sheet/sheetSelectors";
-import { questionsState } from "../../../recoilstates/sheet/currentSheetContent";
+import { foldersState, questionsState } from "../../../recoilstates/sheet/currentSheetContent";
 import { addOwnQuestionModalState, getRandomQuestionModalState } from "../../../recoilstates/question/questionModalStates";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import IsOpenSidebarState from "../../../recoilstates/sheet/sideBarState";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-
-
 
 
 function Questions() {
@@ -25,6 +23,9 @@ function Questions() {
   const getRandomQuestion = useRecoilValue(getRandomQuestionModalState);
   const [randomQuestion,setRandomquestion] = useState(null);
   const [sideBarOpen,setSideBarOpen] = useRecoilState(IsOpenSidebarState);
+  const folderMap = useRecoilValue(foldersState);
+  const [showTopic,setShowTopic] = useState(false);
+
 
   const handleRandomQuestion = ()=>{
     console.log("Random question button clicked");
@@ -40,6 +41,10 @@ function Questions() {
     }
     setRandomquestion(question);
   }
+
+  useEffect(()=>{
+    setShowTopic(false);
+  },[randomQuestion])
 
 
   return (
@@ -74,7 +79,7 @@ function Questions() {
           <div onClick={()=>handleRandomQuestion()} className="py-2 select-none  border border-gray-500 text-white font-bold rounded-md flex items-center justify-center px-5 hover:cursor-pointer hover:border-green-600  hover:bg-blue-400/5 hover:scale-105 ">
             Random 
           </div>
-          {(currFolder?.childFolderIds?.length == 0  && currFolder?.questionIds?.length > 0) && (
+          {(currFolder?.childFolderIds?.length == 0) && (
               <div onClick={()=>setCreateOwnQuestionModalState(true)} className="py-2 border select-none border-gray-500 text-white font-bold rounded-md flex items-center justify-center px-5 hover:cursor-pointer hover:border-blue-600  hover:bg-blue-400/5 hover:scale-105 ">
                 Create Own Question 
               </div>
@@ -96,13 +101,19 @@ function Questions() {
                       🎲
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">
-                        Random Pick
-                      </h3>
+                        <h3 className="font-semibold text-white">
+                          Random Pick
+                        </h3>
 
-                      <p className="text-xs text-gray-400">
-                        Surprise challenge selected for you
-                      </p>
+                      <div className="flex items-center gap-3">
+                          <p onClick={()=>setShowTopic(prev=>!prev)} className="text-xs select-none text-gray-200 border w-fit px-4 py-1 rounded-lg hover:bg-blue-800/5 hover:scale-105 mt-2 font-bold hover:cursor-pointer ">
+                           {showTopic ? "Hide topic" : "Show Topic"}
+                          </p>
+                            { showTopic && <p className=" text-sm text-blue-400  pt-2 ">
+                              {folderMap[randomQuestion.folderId]?.name || "Unknown"}
+                              </p>
+                            } 
+                      </div>
                     </div>
 
                   </div>

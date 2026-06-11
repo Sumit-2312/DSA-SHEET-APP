@@ -256,6 +256,7 @@ const handleNameChange = async () => {
         {
           ques.type === "Custom" ? (
               <Link
+                target="_blank"
                 to={`/customQuestion/${ques.id}`}
                 onClick={(e) => e.stopPropagation()}
                 className="text-[12px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/10 px-3.5 py-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all"
