@@ -8,6 +8,7 @@ async function Connect() {
             throw new Error("No mongo url in env file");
         }
         console.log("Connecting to database...");
+        console.log(`Mongo URI: ${process.env.MONGO_URI}`);
         await mongoose.connect(process.env.MONGO_URI);
         
         console.log("Connected to database");
