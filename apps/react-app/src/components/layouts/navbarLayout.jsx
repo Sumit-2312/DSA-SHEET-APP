@@ -4,6 +4,7 @@ import CreateSheetModal from '../util-components/sheetComponents/createSheetModa
 import ViewAllSheetsModal from '../util-components/sheetComponents/viewAllSheetsModal'
 import EditSheetNameModal from '../util-components/sheetComponents/editSheetNameModal'
 import AddOwnQuestionModal from "../util-components/QuestionComponents/AddOwnQuestionComponent"
+import UpdateSolveStateComponent from '../util-components/QuestionComponents/UpdateSolvedStateComponent'
 
 function NavbarLayout() {
   return (
@@ -17,6 +18,7 @@ function NavbarLayout() {
         <ViewAllSheetsModal/>
         <EditSheetNameModal/>
         <AddOwnQuestionModal/>
+        <UpdateSolveStateComponent/>
     </div>
   )
 }

@@ -13,7 +13,6 @@ import { createSheet } from '../utils/sheet/createSheet.js';
 import { deleteSheet } from '../utils/sheet/deleteSheet.js';
 import { updateSheet } from '../utils/sheet/updateSheet.js';
 import { addCustomQuestion } from '../utils/sheet/addCustomQuestion.js';
-import { get } from 'mongoose';
 import getCustomQuestionById from '../utils/sheet/getCustomQuestionById.js';
 
 

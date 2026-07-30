@@ -12,6 +12,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import type { basicResponseType } from "@repo/types/apiResponse/basicResponseType";
 import { foldersState, questionsState } from "../../../recoilstates/sheet/currentSheetContent";
+import { updateSolveModal } from "../../../recoilstates/question/updateSolveModal";
+
 
 const getDifficultyStyle = (difficulty: string) => {
   if (difficulty === "easy")   return "text-teal-700   bg-teal-50   dark:text-teal-300   dark:bg-teal-900/20";
@@ -25,39 +27,32 @@ function QuestionItem({ ques }: { ques: Question }) {
   const openResourceModal = useSetRecoilState(addResourceModalState);
   const openNotesModal    = useSetRecoilState(notesModalState);
   const setActiveQuestion = useSetRecoilState(activeQuestionState);
-  const [isDisabled, setIsDisabled] = useState(false);
+  const [isDisabled, ] = useState(false);
   const [, setFolderMap] = useRecoilState(foldersState);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(ques.title); 
+  const [, setUpdateSolveOpen] = useRecoilState(updateSolveModal);
 
-  useEffect(()=>{
-    console.log(`QuestionItem : { ques: ${ques.title} , questionId: ${ques.id} } rendered  , type: ${ques.type}`);
-  });
+  // useEffect(()=>{
+  //   console.log(`QuestionItem : { ques: ${ques.title} , questionId: ${ques.id} } rendered  , type: ${ques.type}`);
+  // });
 
   const isDone = questionMap[ques?.id]?.done;
 
   const handleMarkSolved = async () => {
     try {
-      const response = await axios.patch(
-        `${import.meta.env.VITE_BACKEND_URL}/sheet/question`,
-        {
-          questionId: ques.id,
-          folderId:   ques.folderId,
-          sheetId:    ques.sheetId,
-          fieldToBeUpdated: { done: !isDone },
-        },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-      const data: basicResponseType = response.data;
-      if (!data.success) throw new Error(data.error || "Failed to update");
 
-      setQuestionMap((prev) => ({
-        ...prev,
-        [ques.id]: { ...prev[ques.id], done: !prev[ques.id]?.done },
-      }));
-      toast.success("Done", { autoClose: 1000 });
-      setIsDisabled(true);
-      setTimeout(() => setIsDisabled(false), 3000);
+      console.log("handleMarkSolve called");
+
+      // open the modal
+      setUpdateSolveOpen((prev)=>{
+        console.log("Setting updateSolveModal to ",!prev);
+        return {
+          isOpen: !prev.isOpen,
+          question: ques
+        };
+      });
+
     } catch (err) {
       console.error(err);
       toast.error("Failed to update. Please try again.");
