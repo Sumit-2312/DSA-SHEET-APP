@@ -16,7 +16,8 @@ export interface Question{
 	inputs?: {
 		input: string,
 		output: string
-	}[]
+	}[],
+	solvedAt: Date|null
 }
 
 export interface Folder{

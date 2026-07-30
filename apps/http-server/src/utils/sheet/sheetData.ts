@@ -91,7 +91,8 @@ export const sheetData = async (req: any, res: Response) => {
         inputs: q.inputs?.map(input => ({
           input: input.input ?? "",
           output: input.output ?? ""
-        })) || []
+        })) || [],
+        solvedAt: q.solvedAt ?? null
       };
 
       questionMap[qId] = normalizedQuestion;

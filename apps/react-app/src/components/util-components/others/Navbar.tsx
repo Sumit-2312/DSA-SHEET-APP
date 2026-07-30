@@ -1,4 +1,4 @@
-import { BellRing, ChevronDown, User } from 'lucide-react';
+import { Bell, BellRing, ChevronDown, User } from 'lucide-react';
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -73,7 +73,9 @@ function Navbar() {
         </div>
         {/* right side */}
        <div className='flex items-center gap-10'>
+        {/* Editor and sheets icon */}
             <div className='flex gap-5 items-center'>
+                    {/* Editor */}
                         <div  
                             className={` ${selectedField==="Editor"?"bg-slate-950":"bg-slate"} hover:cursor-pointer hover:bg-slate-950 px-3 py-1 bg-blue-950 rounded-lg `} 
                             onClick={()=>{
@@ -83,6 +85,7 @@ function Navbar() {
                         >
                             <div>Editor</div>
                         </div>
+                        {/* Sheets */}
                         <div className="relative select-none">
                             {/* Trigger */}
                             <div
@@ -144,8 +147,15 @@ function Navbar() {
                                     </div>
                                 )}
                         </div>
+                        {/* Revision list */}
+                        <div 
+                         onClick={()=>{handleNavigate("notifications")}}
+                         className='text-white hover:scale-110 select-none cursor-pointer'  >
+                            <Bell />
+                        </div>
   
             </div>
+            {/* Profile icon */}
             <div  className='h-10 w-10 hover:cursor-pointer rounded-full border border-gray-500  overflow-hidden font-bold' onClick={()=>handleNavigate("profile")}  >
                 {
                     (userDetails && userDetails.name )?(

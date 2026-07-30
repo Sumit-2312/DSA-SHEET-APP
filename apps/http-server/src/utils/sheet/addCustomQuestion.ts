@@ -46,7 +46,8 @@ export const addCustomQuestion = async (req, res) => {
             platform,
             difficulty,
             type: "Custom",
-            createdBy: userFromDb._id
+            createdBy: userFromDb._id,
+            solvedAt: null
         });
 
         if( !questionFromDb){
@@ -71,7 +72,7 @@ export const addCustomQuestion = async (req, res) => {
                 input: input.input ?? "",
                 output: input.output ?? ""
             })),
-
+            solvedAt: questionFromDb.solvedAt ?? null,
             platform: questionFromDb.platform ?? "",
             difficulty: questionFromDb.difficulty as "easy"|"medium"|"hard",
             type: questionFromDb.type ?? "Normal",

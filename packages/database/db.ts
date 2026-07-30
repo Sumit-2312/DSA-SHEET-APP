@@ -163,6 +163,10 @@ const QuestionSchema = new Schema({
         return this.type === "Custom";
       }),
       default: []
+    },
+    solvedAt:{
+      type: Date,
+      default: null
     }
 }, { timestamps: true });
 

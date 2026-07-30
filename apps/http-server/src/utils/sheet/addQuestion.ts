@@ -79,7 +79,8 @@ export const addQuestion = async(req:any,res:Response) =>{
                 platform: question.platform,
                 resourceLink: question.resourceLink,
                 notes: question.notes,
-                createdBy: userFromDb._id.toString()
+                createdBy: userFromDb._id.toString(),
+                solvedAt: null
             });
 
             const response:addQuestionResponseType = {
@@ -94,7 +95,8 @@ export const addQuestion = async(req:any,res:Response) =>{
                     sheetId: newQuestion.sheetId.toString(),
                     folderId: newQuestion.folderId.toString() ,
                     platform: newQuestion.platform || "",
-                    done : newQuestion.done || false
+                    done : newQuestion.done || false,
+                    solvedAt: null
                 }
              }
                 return res.status(200).json(response);

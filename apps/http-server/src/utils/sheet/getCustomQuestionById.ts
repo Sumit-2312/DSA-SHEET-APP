@@ -51,7 +51,8 @@ export default async function getCustomQuestionById(req,res){
                 inputs: questionFromDb.inputs?.map(input => ({
                 input: input.input ?? "",
                 output: input.output ?? ""
-                })) || []
+                })) || [],
+                solvedAt: questionFromDb.solvedAt ?? null
             };
 
         const response = {

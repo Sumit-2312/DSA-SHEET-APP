@@ -19,19 +19,19 @@ import getCustomQuestionById from '../utils/sheet/getCustomQuestionById.js';
 
 const SheetRouter = express.Router();
 
-SheetRouter.get('/SheetData', sheetData); // done
+SheetRouter.get('/SheetData', sheetData); 
 SheetRouter.get('/SheetList', sheetList); 
 SheetRouter.get('/user', userDetails);
-SheetRouter.post('/customQuestion', addCustomQuestion); // done
-SheetRouter.patch('/question', updateQuestion); // done
-SheetRouter.post('/question', addQuestion); // done
+SheetRouter.post('/customQuestion', addCustomQuestion); 
+SheetRouter.patch('/question', updateQuestion); 
+SheetRouter.post('/question', addQuestion); 
 SheetRouter.delete('/question', removeQuestion);    
-SheetRouter.post('/folder',  addFolder); // done
+SheetRouter.post('/folder',  addFolder); 
 SheetRouter.patch('/folder', updateFolder);
 SheetRouter.delete('/folder', removeFolder); 
-SheetRouter.post('/createSheet',createSheet); //
+SheetRouter.post('/createSheet',createSheet); 
 SheetRouter.delete('/Sheet',deleteSheet);
-SheetRouter.patch('/Sheet',updateSheet); //
+SheetRouter.patch('/Sheet',updateSheet); 
 SheetRouter.get('/customQuestion/:id', getCustomQuestionById);
 
 export default SheetRouter;
